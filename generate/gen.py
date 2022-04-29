@@ -1,3 +1,8 @@
+"""
+To generate the pages run:
+
+python generate/gen.py generate/bugs.json templates ./
+"""
 import argparse
 import json
 import sys
