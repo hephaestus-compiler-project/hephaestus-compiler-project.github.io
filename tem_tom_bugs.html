@@ -1,0 +1,137 @@
+
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+    <meta http-equiv="Content-Type"content="text/html; charset=iso-8859-1">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+  <title>Bug findings with Type Erasure and Type Overwriting Mutation</title>
+</head>
+
+
+<body bgcolor="#ffffff">
+
+<link type="text/css" rel="stylesheet" href="reports_style.css">
+
+<h2>Bug findings with Type Erasure and Type Overwriting Mutation</h2>
+
+<h3>Groovy</h3>
+
+<ul>
+<li>
+<b>
+#1 STC misses type error when calling a vararg method  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10086">https://issues.apache.org/jira/browse/GROOVY-10086</a>
+<br>
+<b>Date found</b>:
+2021-05-13
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-16
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo {}
+class X<T> {
+  T f;
+  X(T f) {
+    this.f = f;
+  }
+  T getF() {
+    this.f;
+  }
+}
+class A {
+  void foo(int x, X<Foo>... y) {
+    Foo foo = y[0].getF(); // ClastCastException at runtime
+  }
+}
+public class Main {
+    public static void main(String[] args) {
+      A a = new A();
+      a.foo(1, new X<>(1));
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Variable arguments, Type argument inference
+<br>
+<br>
+</details>
+</li>
+</ul>
+
+<h3>Kotlin</h3>
+
+<ul>
+<li>
+<b>
+#2 NI: Inferred type does not respect the bound of type variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48765">https://youtrack.jetbrains.com/issue/KT-48765</a>
+<br>
+<b>Date found</b>:
+2021-09-15
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+open class A<T1, T2> {}
+class B {
+    fun <T1: Number, T2: A<Float, T1>> foo(x1: T2, x2: T1) {}
+}
+class C<T: D, T2>(val x: T, val y: T2) {
+    fun test() {
+        B().foo(x, foo())
+    }
+}
+open class D: A<Float, Number>()
+fun <T: String> foo(): T  {
+    return "" as T // this cast is safe because String is final.
+}
+fun main() {
+    C(D(), 10.5).test()
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Parameterized function, Bounded type parameter, Type argument inference, Subtyping
+<br>
+<br>
+</details>
+</li>
+</ul>
+
+
+
+</body>
+</html>

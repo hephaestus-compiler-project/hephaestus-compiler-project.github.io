@@ -1,0 +1,1068 @@
+
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+    <meta http-equiv="Content-Type"content="text/html; charset=iso-8859-1">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+  <title>Bug findings with Type Overwriting Mutation</title>
+</head>
+
+
+<body bgcolor="#ffffff">
+
+<link type="text/css" rel="stylesheet" href="reports_style.css">
+
+<h2>Bug findings with Type Overwriting Mutation</h2>
+
+<h3>Groovy</h3>
+
+<ul>
+<li>
+<b>
+#1 STC involves improper subtyping rules for parameterized types with wildcard types 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10371">https://issues.apache.org/jira/browse/GROOVY-10371</a>
+<br>
+<b>Date found</b>:
+2021-11-16
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {}
+class B<T> extends A<T> {}
+class Test {
+  B<? extends Number> x = new B<Double>();
+  A<Number> y = x;
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Inheritance, Parameterized type, Use-site variance
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#2 STC does not catch type error when assigning a type parameter to a variable of another type 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10370">https://issues.apache.org/jira/browse/GROOVY-10370</a>
+<br>
+<b>Date found</b>:
+2021-11-16
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A {}
+class Test {
+  public static void main(String[] args) {
+    A x = m(1)
+    System.out.println(x)
+  }
+  static <T> A m(T x) {
+    return x;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized function
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#3 STC does not check the upper bounds of type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10369">https://issues.apache.org/jira/browse/GROOVY-10369</a>
+<br>
+<b>Date found</b>:
+2021-11-15
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class B<T1, T2 extends T1> {}
+class Test {
+  public static void main(String[] args) {
+    var x = new B<Number, Boolean>();
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Bounded type parameter
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#4 STC ignores declared type of variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10360">https://issues.apache.org/jira/browse/GROOVY-10360</a>
+<br>
+<b>Date found</b>:
+2021-11-10
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Information Provided
+<br>
+<b>Resolution date</b>:
+2021-11-12
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A {
+  void m() {}
+}
+class Test {
+  public static void main(String[] args) {
+    final Object x = foo();
+    x.m(); // should report an error. method `m` is not found in class Object.
+  }
+  public static A foo() {
+    return new A();
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Subtyping
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#5 STC misses type error when involving a variable with a char a declared type 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10359">https://issues.apache.org/jira/browse/GROOVY-10359</a>
+<br>
+<b>Date found</b>:
+2021-11-10
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test {
+  public static void main(String[] args) {
+    char f = (Integer) null;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Primitive type
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#6 STC instantiates parameterized function with a wrong type leading to unsoundness  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10339">https://issues.apache.org/jira/browse/GROOVY-10339</a>
+<br>
+<b>Date found</b>:
+2021-11-01
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-12
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test {
+  static <T> T bar(T x, T y) { return x; }
+  static String m() { return ""; }
+  static void main(String[] args) {
+     Integer x = bar(m(), 1); // STC misses the error.
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized function, Type argument inference
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#7 STC fails to catch type error on the return type of lambdas  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10277">https://issues.apache.org/jira/browse/GROOVY-10277</a>
+<br>
+<b>Date found</b>:
+2021-10-01
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-16
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+class Main {
+  static void main(String[] args) {
+    bar({ -> true}); // should not type-check
+    bar({ -> true} as Supplier<Long>); // should not type-check.
+  }
+  static Long bar(Supplier<Long> x) {
+    x.get()
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Lambda, Function type
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#8 STC infers a type that does not respect the bound of type variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10251">https://issues.apache.org/jira/browse/GROOVY-10251</a>
+<br>
+<b>Date found</b>:
+2021-09-22
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T1, T2> {
+  T2 x;
+  A(T2 x) {
+    this.x = x;
+  } 
+}
+class B {
+  <T1 extends Number, T2 extends A<Float, T1>> void foo(T2 x1, T1 x2) {
+    T1 y = x1.x; // CCE at runtime
+  }
+}
+class C<T extends D> {
+  T x;
+  C(T x) {
+    this.x = x;
+  }
+  void test() {
+    (new B()).foo(x, foo());
+  }
+  static <X extends Number> X foo() {
+    return null;
+  }
+}
+class D extends A<Float, String> {
+  D() {
+    super("");
+  }
+}
+class Main {
+  public static void main(String[] args) {
+    (new C<D>(new D())).test();
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized function, Bounded type parameter, Type argument inference, Inheritance, Subtyping
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#9 Misleading report when using as a type argument a type parameter that extends an array type 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10129">https://issues.apache.org/jira/browse/GROOVY-10129</a>
+<br>
+<b>Date found</b>:
+2021-06-08
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {}
+class B {}
+@groovy.transform.TypeChecked
+class C<G extends B[]> extends A<G> {} // It works if G extends B
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Inheritance, Array, Parameterized type
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#10 STC misses type check in Generic class with a bounded type parameter 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10127">https://issues.apache.org/jira/browse/GROOVY-10127</a>
+<br>
+<b>Date found</b>:
+2021-06-08
+<br>
+<b>Status</b>:
+In Progress
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+public class Main {
+  public static void main(String[] args) {
+    new Foo<B>().foo(new B()).m()
+  }
+}
+class A{}
+class B extends A{
+  void m() {}
+}
+@groovy.transform.TypeChecked
+class Foo<T extends A> {
+  T foo(T x) {
+    x = new A(); // does not catch the error;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance, Bounded type parameter
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#11 STC: accepts incorrect program with flow typing 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10096">https://issues.apache.org/jira/browse/GROOVY-10096</a>
+<br>
+<b>Date found</b>:
+2021-05-19
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Main {
+  public static Bar buz(Foo bux) {
+    (((true || bux instanceof Bar)) ?
+      bux :
+       new Bar())
+  }
+  public static void main(String[] args) {
+    buz(new Foo()).bar()
+  }
+}
+class Foo {
+  public void foo() {}
+}
+class Bar extends Foo {
+  public void bar() {}
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Flow typing, Subtyping, Conditionals, Inheritance
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#12 Wrong LUB when involving a numeric constant and null 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10095">https://issues.apache.org/jira/browse/GROOVY-10095</a>
+<br>
+<b>Date found</b>:
+2021-05-18
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo {  void foo() {
+    float x = (false) ? 10.4: null;
+  }
+}
+public class Main {
+  public static void main(String[] args) {
+    new Foo().foo();
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Conditionals, Primitive type
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#13 STC misses type checks on default arguments  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10094">https://issues.apache.org/jira/browse/GROOVY-10094</a>
+<br>
+<b>Date found</b>:
+2021-05-18
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-09-10
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo {
+  void bar(int x = "str") {
+    System.out.println(x)
+  }
+}
+class Main {
+  public static void main(String[] args) {
+    (new Foo()).bar()
+  } 
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Named arguments
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#14 Compiler crash when trying to cast a boolean to float variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10092">https://issues.apache.org/jira/browse/GROOVY-10092</a>
+<br>
+<b>Date found</b>:
+2021-05-17
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.CompileStatic
+class Main {
+  void foo() {
+    float x = true
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Primitive type
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#15 Type checking of array initializer expressions  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9994">https://issues.apache.org/jira/browse/GROOVY-9994</a>
+<br>
+<b>Date found</b>:
+2021-03-21
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-26
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+public class Main {
+  public static void main(String[] args) {
+    Integer[] arr = new Integer[] {new Object(), 1}; // STC misses the error here
+    Integer y = arr[0]; // ClassCastException at runtime
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Array
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#16 CLONE - STC does not report type mismatches for coerced list expression 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9986">https://issues.apache.org/jira/browse/GROOVY-9986</a>
+<br>
+<b>Date found</b>:
+2021-03-17
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+public class Main {
+    public static void main(String[] args) {
+      // Integer[] arr = new Integer[]{1, "str"}; // does not report error (see GROOVY-9985)
+      Integer[] arr2 = [1, "fda"] as Integer[] // does not report error
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Array, Cast
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#17 STC does not report type mismatches in array initializers  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9985">https://issues.apache.org/jira/browse/GROOVY-9985</a>
+<br>
+<b>Date found</b>:
+2021-03-15
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-03-18
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+public class Main {
+    public static void main(String[] args) {
+      Integer[] arr = new Integer[]{1, "str"}; // does not report error
+      // Integer[] arr2 = [1, "fda"] as Integer[] // does not report error (see GROOVY-9986)
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Array
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#18 STC fails to report missing constructor 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9960">https://issues.apache.org/jira/browse/GROOVY-9960</a>
+<br>
+<b>Date found</b>:
+2021-03-01
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A {
+  String x;
+  public A(String x) {
+    this.x = x;
+  }
+}
+class B extends A {}
+public class Main {
+  public static void main(String[] args) {
+    B x = new B();
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Inheritance
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#19 STC does not correctly type check variable whose type is a type variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9952">https://issues.apache.org/jira/browse/GROOVY-9952</a>
+<br>
+<b>Date found</b>:
+2021-02-22
+<br>
+<b>Status</b>:
+In Progress
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Y {}
+class X<T> {
+    T x;
+    public X() {
+      this.x = new Y()
+    }
+    T foo() { return this.x }
+}
+class Main {
+  public static void main(String[] args) {
+    bar(new X<Integer>());
+  }
+  public static Integer bar(X<Integer> y) {
+    return y.foo()
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#20 internal compiler error during instruction selection 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9937">https://issues.apache.org/jira/browse/GROOVY-9937</a>
+<br>
+<b>Date found</b>:
+2021-02-11
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo {
+  static void foo() {
+    return 1   
+  }
+}
+</xmp>
+</pre>
+
+<br>
+<br>
+</details>
+</li>
+</ul>
+
+<h3>Kotlin</h3>
+
+<ul>
+<li>
+<b>
+#21 IllegalArgumentException: ClassicTypeSystemContext couldn't handle: Captured(out Number)  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-49101">https://youtrack.jetbrains.com/issue/KT-49101</a>
+<br>
+<b>Date found</b>:
+2021-10-06
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-20
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T: B<out Number>>(val x: T) {
+    fun test() {
+      val y: Int = x.m<C<out Number>>()
+    }
+}
+class B<T1> {
+    fun <X1: C<T1>> m(): Int = 1
+}
+class C<T>
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Use-site variance, Parameterized type, Parameterized function, Type argument inference
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#22 NI: Reporting misleading error message when initializing a type constructor with unresolved reference 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47117">https://youtrack.jetbrains.com/issue/KT-47117</a>
+<br>
+<b>Date found</b>:
+2021-06-03
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<J>() {}
+class Bar<H, N>(val x: Foo<N>) {}
+fun foo(): Unit
+{
+  val y = Bar<Any, Any>(Foo<N>())
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#23 Superfluous TYPE_MISMATCH when instantiating type constructor with bounded type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47458">https://youtrack.jetbrains.com/issue/KT-47458</a>
+<br>
+<b>Date found</b>:
+2021-06-25
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<out Y, Z: Y>
+open class A
+class B : A()
+fun main() {
+    val x: Foo<A, in A> = Foo<B, B>()
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Declaration-site variance, Bounded type parameter, Use-site variance, Parameterized type, Inheritance
+<br>
+<br>
+</details>
+</li>
+</ul>
+
+<h3>Java</h3>
+
+<ul>
+<li>
+<b>
+#24 NPE at at jdk.compiler/com.sun.tools.javac.jvm.Code.emitop  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://bugs.openjdk.java.net/browse/JDK-8267610">https://bugs.openjdk.java.net/browse/JDK-8267610</a>
+<br>
+<b>Date found</b>:
+2021-05-20
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-06-24
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+class Main {
+  public Integer foo(Object x) {
+    Integer bar = 1;
+    return ((x instanceof Number y) ?
+        ((Supplier<Integer>) (() -> {
+          return ((y instanceof Integer z) ? z : bar);
+        })).get() : bar);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function type, Flow typing, Lambda, Conditionals
+<br>
+<br>
+</details>
+</li>
+</ul>
+
+
+
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+    <meta http-equiv="Content-Type"content="text/html; charset=iso-8859-1">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+  <title>Hephaestus Compiler Testing Project</title>
+</head>
+
+
+<body bgcolor="#ffffff">
+
+<link type="text/css" rel="stylesheet" href="style.css">
+
+<font face="ariel,helvetica">
+
+<h2>Project Hephaestus for Compiler Testing</h2>
+
+Hephaestus is a testing framework for validating static typing procedures
+in compilers. This is done by a combination of
+program generation and transformation-based compiler testing.
+Currently, Hephaestus has been used to test the type checkers of
+three popular programming languages: 
+<i>Java</i>, 
+<i>Kotlin</i>, 
+and <i>Groovy</i>.
+Hephaustus has revealed 156 (86 fixed) bugs.
+
+<p>
+
+Hephaestus' <i>program generation</i> comes with three
+important characteristics.
+First, it produces <b>semantically valid</b> programs;
+rejecting a well-formed program produced by our
+generator indicates a potential compiler bug
+(test oracle).
+Second,
+the resulting programs rely heavily on
+parametric polymorphism
+(e.g., use of parameterized classes / functions,
+etc.)
+Third,
+to test compilers of different languages
+our generator yields programs at a higher-level of abstraction,
+and then uses translation mechanisms to
+convert the "abstract" programs into the target language.
+Currently, our generator produces programs written in
+three popular programming languages,
+namely, Java, Kotlin, and Groovy.
+
+</p>
+
+<p>
+
+Beyond program generation,
+Hephaestus also supports <i>transformation-based</i> compiler testing
+by introducing two mutations,
+<b>type erasure mutation</b> and <b>type overwriting mutation</b>.
+Their goal is to exercise compilers' type inference algorithms
+and other type-related operations.
+Given an input program <code>P</code>,
+the type erasure mutation removes declared types from variables and parameters,
+or type arguments from parameterized constructor and method calls,
+while preserving the well-formedness of <code>P</code>.
+The type overwriting mutation adopts a fault-injecting approach,
+and introduces a type error in <code>P</code>
+by replacing a type <code>t1</code> 
+with another incompatible type <code>t2</code>.
+The type overwriting mutation updates the test oracle,
+as compiling a program obtained from this mutation
+indicates a potential soundness bug in the compiler under test.
+
+</p>
+
+<p>
+
+Bugs found in compilers by hephaestus:
+
+<p>
+Summary: <b>156</b> (total) / <b>86</b> (fixed)<br>
+<ul>
+<li>Groovy bugs: <b>113</b> (total) / <b>74</b> (fixed)</li>
+<li>Kotlin bugs: <b>32</b> (total) / <b>10</b> (fixed)</li>
+<li>Java bugs: <b>11</b> (total) / <b>2</b> (fixed)</li>
+<li>Program Generator: <b>78</b> (total)</li>
+<li>Type Erasure Mutation: <b>52</b> (total)</li>
+<li>Type Overwriting Mutation: <b>24</b> (total)</li>
+<li>Type Erasure and Type Overwriting Mutation: <b>2</b> (total)</li>
+<li>Unexpected Compile Time Error bugs: <b>104</b> (total)</li>
+<li>Undefined Runtime Behavior bugs: <b>22</b> (total)</li>
+<li>Crash bugs: <b>30</b> (total)</li>
+</ul>
+</p>
+Program Generator (<a href="hephaestus_bugs.html">report links</a>) <br>
+Type Erasure Mutation (<a href="tem_bugs.html">report links</a>) <br>
+Type Overwriting Mutation (<a href="tom_bugs.html">report links</a>) </br>
+Type Erasure and Type Overwriting Mutation (<a href="tem_tom_bugs.html">report links</a>)
+</p>
+
+<p><b>hephaestus Tool</b>: <a href="https://github.com/hephaestus-compiler-project/hephaestus">https://github.com/hephaestus-compiler-project/hephaestus</a></p>
+
+<h3>Team</h3>
+<a href="https://theosotr.github.io/">Thodoris Sotiropoulos</a> <br>
+<a href="https://stefanoschaliasos.github.io/">Stefanos Chaliasos</a> <br>
+<a href="https://www.spinellis.gr/index.html.var">Diomidis Spinellis</a> <br>
+<a href="https://www.doc.ic.ac.uk/~livshits/">Benjamin Livshits</a> <br>
+<a href="https://dimitro.gr/">Dimitris Mitropoulos</a> <br>
+
+<h3>Publications</h3>
+
+  [1] <a href="https://theosotr.github.io/assets/pdf/pldi22.pdf">
+  <B>Finding Typing Compiler Bugs</B></a>. 
+  [<a href="https://github.com/hephaestus-compiler-project/hephaestus-pldi-eval">artifact</a>] <br>
+Stefanos Chaliasos<sup>*</sup>, Thodoris Sotiropoulos<sup>*</sup>, Diomidis Spinellis, Arthur Gervais, Benjamin Livshits, and Dimitris Mitropoulos. </br> 
+In <a href="https://conf.researchr.org/home/pldi-2022"><I>Proceedings of PLDI 2022</I></a>, San Diego, US, June 2022. </br>
+<div style="font-size:10pt;margin-bottom:-10pt "><sup>*</sup>
+  Both authors contributed equally to this work.
+</div>
+<br>
+
+  [2] <a href="https://dl.acm.org/doi/pdf/10.1145/3485500">
+  <B>Well-Typed Programs Can Go Wrong: A Study of Typing-Related Bugs in JVM Compilers</B></a>. 
+  [<a href="https://github.com/hephaestus-compiler-project/types-bug-study-artifact">artifact</a>] <br>
+Stefanos Chaliasos<sup>*</sup>, Thodoris Sotiropoulos<sup>*</sup>, Georgios-Petros Drosos, Charalambos Mitropoulos, Dimitris Mitropoulos, and Diomidis Spinellis. </br> 
+In <a href="https://2021.splashcon.org/track/splash-2021-oopsla"><I>Proceedings of OOPSLA 2021</I></a>, Chicago, US, October 2021. </br>
+<div style="font-size:10pt;margin-bottom:-10pt "><sup>*</sup>
+  Both authors contributed equally to this work.
+</div>
+
+<br><br>
+
+<tt>last modified: 2022-04-29</tt>
+</body>
+</html>
