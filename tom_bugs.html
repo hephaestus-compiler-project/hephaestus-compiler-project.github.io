@@ -16,12 +16,201 @@
 
 <h2>Bug findings with Type Overwriting Mutation</h2>
 
+<h3>Kotlin</h3>
+
+<ul>
+<li>
+<b>
+#1 IllegalArgumentException: ClassicTypeSystemContext couldn't handle: Captured(out Number)  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-49101">https://youtrack.jetbrains.com/issue/KT-49101</a>
+<br>
+<b>Date found</b>:
+2021-10-06
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-20
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T: B<out Number>>(val x: T) {
+    fun test() {
+      val y: Int = x.m<C<out Number>>()
+    }
+}
+class B<T1> {
+    fun <X1: C<T1>> m(): Int = 1
+}
+class C<T>
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Use-site variance, Parameterized type, Parameterized function, Type argument inference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#2 NI: Reporting misleading error message when initializing a type constructor with unresolved reference 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47117">https://youtrack.jetbrains.com/issue/KT-47117</a>
+<br>
+<b>Date found</b>:
+2021-06-03
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<J>() {}
+class Bar<H, N>(val x: Foo<N>) {}
+fun foo(): Unit
+{
+  val y = Bar<Any, Any>(Foo<N>())
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#3 Superfluous TYPE_MISMATCH when instantiating type constructor with bounded type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47458">https://youtrack.jetbrains.com/issue/KT-47458</a>
+<br>
+<b>Date found</b>:
+2021-06-25
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<out Y, Z: Y>
+open class A
+class B : A()
+fun main() {
+    val x: Foo<A, in A> = Foo<B, B>()
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Declaration-site variance, Bounded type parameter, Use-site variance, Parameterized type, Inheritance
+
+<br>
+<br>
+</details>
+</li>
+</ul>
+
+<h3>Java</h3>
+
+<ul>
+<li>
+<b>
+#4 NPE at at jdk.compiler/com.sun.tools.javac.jvm.Code.emitop  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://bugs.openjdk.java.net/browse/JDK-8267610">https://bugs.openjdk.java.net/browse/JDK-8267610</a>
+<br>
+<b>Date found</b>:
+2021-05-20
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-06-24
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+class Main {
+  public Integer foo(Object x) {
+    Integer bar = 1;
+    return ((x instanceof Number y) ?
+        ((Supplier<Integer>) (() -> {
+          return ((y instanceof Integer z) ? z : bar);
+        })).get() : bar);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function type, Flow typing, Lambda, Conditionals
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/openjdk/jdk/commit/7ab12856c4b'>https://github.com/openjdk/jdk/commit/7ab12856c4b</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+</ul>
+
 <h3>Groovy</h3>
 
 <ul>
 <li>
 <b>
-#1 STC involves improper subtyping rules for parameterized types with wildcard types 
+#5 STC involves improper subtyping rules for parameterized types with wildcard types 
 </b>
 
 <details>
@@ -53,13 +242,14 @@ class Test {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Inheritance, Parameterized type, Use-site variance
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#2 STC does not catch type error when assigning a type parameter to a variable of another type 
+#6 STC does not catch type error when assigning a type parameter to a variable of another type 
 </b>
 
 <details>
@@ -95,13 +285,14 @@ class Test {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized function
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#3 STC does not check the upper bounds of type parameters 
+#7 STC does not check the upper bounds of type parameters 
 </b>
 
 <details>
@@ -133,13 +324,14 @@ class Test {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Bounded type parameter
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#4 STC ignores declared type of variable 
+#8 STC ignores declared type of variable 
 </b>
 
 <details>
@@ -181,13 +373,14 @@ class Test {
 </pre>
 <b>Test Case Characteristics</b>:
 Subtyping
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#5 STC misses type error when involving a variable with a char a declared type 
+#9 STC misses type error when involving a variable with a char a declared type 
 </b>
 
 <details>
@@ -218,13 +411,14 @@ class Test {
 </pre>
 <b>Test Case Characteristics</b>:
 Primitive type
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#6 STC instantiates parameterized function with a wrong type leading to unsoundness  -- Fixed
+#10 STC instantiates parameterized function with a wrong type leading to unsoundness  -- Fixed
 </b>
 
 <details>
@@ -261,13 +455,14 @@ class Test {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized function, Type argument inference
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#7 STC fails to catch type error on the return type of lambdas  -- Fixed
+#11 STC fails to catch type error on the return type of lambdas  -- Fixed
 </b>
 
 <details>
@@ -307,13 +502,14 @@ class Main {
 </pre>
 <b>Test Case Characteristics</b>:
 Lambda, Function type
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#8 STC infers a type that does not respect the bound of type variable 
+#12 STC infers a type that does not respect the bound of type variable 
 </b>
 
 <details>
@@ -372,13 +568,14 @@ class Main {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized function, Bounded type parameter, Type argument inference, Inheritance, Subtyping
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#9 Misleading report when using as a type argument a type parameter that extends an array type 
+#13 Misleading report when using as a type argument a type parameter that extends an array type 
 </b>
 
 <details>
@@ -408,13 +605,14 @@ class C<G extends B[]> extends A<G> {} // It works if G extends B
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Bounded type parameter, Inheritance, Array, Parameterized type
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#10 STC misses type check in Generic class with a bounded type parameter 
+#14 STC misses type check in Generic class with a bounded type parameter 
 </b>
 
 <details>
@@ -455,13 +653,14 @@ class Foo<T extends A> {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Inheritance, Bounded type parameter
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#11 STC: accepts incorrect program with flow typing 
+#15 STC: accepts incorrect program with flow typing 
 </b>
 
 <details>
@@ -504,13 +703,14 @@ class Bar extends Foo {
 </pre>
 <b>Test Case Characteristics</b>:
 Flow typing, Subtyping, Conditionals, Inheritance
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#12 Wrong LUB when involving a numeric constant and null 
+#16 Wrong LUB when involving a numeric constant and null 
 </b>
 
 <details>
@@ -545,13 +745,14 @@ public class Main {
 </pre>
 <b>Test Case Characteristics</b>:
 Conditionals, Primitive type
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#13 STC misses type checks on default arguments  -- Fixed
+#17 STC misses type checks on default arguments  -- Fixed
 </b>
 
 <details>
@@ -592,12 +793,21 @@ class Main {
 <b>Test Case Characteristics</b>:
 Named arguments
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/c4b73b1a65'>https://github.com/apache/groovy/commit/c4b73b1a65</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#14 Compiler crash when trying to cast a boolean to float variable 
+#18 Compiler crash when trying to cast a boolean to float variable 
 </b>
 
 <details>
@@ -629,13 +839,14 @@ class Main {
 </pre>
 <b>Test Case Characteristics</b>:
 Primitive type
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#15 Type checking of array initializer expressions  -- Fixed
+#19 Type checking of array initializer expressions  -- Fixed
 </b>
 
 <details>
@@ -672,12 +883,21 @@ public class Main {
 <b>Test Case Characteristics</b>:
 Array
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/1265acad6e'>https://github.com/apache/groovy/commit/1265acad6e</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#16 CLONE - STC does not report type mismatches for coerced list expression 
+#20 CLONE - STC does not report type mismatches for coerced list expression 
 </b>
 
 <details>
@@ -709,13 +929,14 @@ public class Main {
 </pre>
 <b>Test Case Characteristics</b>:
 Array, Cast
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#17 STC does not report type mismatches in array initializers  -- Fixed
+#21 STC does not report type mismatches in array initializers  -- Fixed
 </b>
 
 <details>
@@ -752,12 +973,24 @@ public class Main {
 <b>Test Case Characteristics</b>:
 Array
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/1265acad6e'>https://github.com/apache/groovy/commit/1265acad6e</a>
+</li>
+<li>
+<a href='https://github.com/apache/groovy/commit/465387c96f'>https://github.com/apache/groovy/commit/465387c96f</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#18 STC fails to report missing constructor 
+#22 STC fails to report missing constructor 
 </b>
 
 <details>
@@ -795,13 +1028,14 @@ public class Main {
 </pre>
 <b>Test Case Characteristics</b>:
 Inheritance
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#19 STC does not correctly type check variable whose type is a type variable 
+#23 STC does not correctly type check variable whose type is a type variable 
 </b>
 
 <details>
@@ -843,13 +1077,14 @@ class Main {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#20 internal compiler error during instruction selection 
+#24 internal compiler error during instruction selection 
 </b>
 
 <details>
@@ -879,183 +1114,7 @@ class Foo {
 </xmp>
 </pre>
 
-<br>
-<br>
-</details>
-</li>
-</ul>
 
-<h3>Kotlin</h3>
-
-<ul>
-<li>
-<b>
-#21 IllegalArgumentException: ClassicTypeSystemContext couldn't handle: Captured(out Number)  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-49101">https://youtrack.jetbrains.com/issue/KT-49101</a>
-<br>
-<b>Date found</b>:
-2021-10-06
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-20
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T: B<out Number>>(val x: T) {
-    fun test() {
-      val y: Int = x.m<C<out Number>>()
-    }
-}
-class B<T1> {
-    fun <X1: C<T1>> m(): Int = 1
-}
-class C<T>
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter, Use-site variance, Parameterized type, Parameterized function, Type argument inference
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#22 NI: Reporting misleading error message when initializing a type constructor with unresolved reference 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-47117">https://youtrack.jetbrains.com/issue/KT-47117</a>
-<br>
-<b>Date found</b>:
-2021-06-03
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected runtime behavior
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<J>() {}
-class Bar<H, N>(val x: Foo<N>) {}
-fun foo(): Unit
-{
-  val y = Bar<Any, Any>(Foo<N>())
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#23 Superfluous TYPE_MISMATCH when instantiating type constructor with bounded type parameters 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-47458">https://youtrack.jetbrains.com/issue/KT-47458</a>
-<br>
-<b>Date found</b>:
-2021-06-25
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected runtime behavior
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<out Y, Z: Y>
-open class A
-class B : A()
-fun main() {
-    val x: Foo<A, in A> = Foo<B, B>()
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Declaration-site variance, Bounded type parameter, Use-site variance, Parameterized type, Inheritance
-<br>
-<br>
-</details>
-</li>
-</ul>
-
-<h3>Java</h3>
-
-<ul>
-<li>
-<b>
-#24 NPE at at jdk.compiler/com.sun.tools.javac.jvm.Code.emitop  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://bugs.openjdk.java.net/browse/JDK-8267610">https://bugs.openjdk.java.net/browse/JDK-8267610</a>
-<br>
-<b>Date found</b>:
-2021-05-20
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-06-24
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Supplier;
-class Main {
-  public Integer foo(Object x) {
-    Integer bar = 1;
-    return ((x instanceof Number y) ?
-        ((Supplier<Integer>) (() -> {
-          return ((y instanceof Integer z) ? z : bar);
-        })).get() : bar);
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Function type, Flow typing, Lambda, Conditionals
 <br>
 <br>
 </details>

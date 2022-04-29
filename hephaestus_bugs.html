@@ -16,2539 +16,12 @@
 
 <h2>Bug findings with Program Generator</h2>
 
-<h3>Groovy</h3>
-
-<ul>
-<li>
-<b>
-#1 Incorrect inference of type argument of parameterized method call  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10482">https://issues.apache.org/jira/browse/GROOVY-10482</a>
-<br>
-<b>Date found</b>:
-2022-02-15
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-12
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<T> {
-  Foo(T x) {}
-}
-class Main  {
-  static <T> void bar() {
-    new Foo<T>(baz());
-  }
-  static <Z> Z baz() {
-    return null;
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized function, Parameterized class
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#2 STC cannot compile program with multiple bounded type parameters 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10373">https://issues.apache.org/jira/browse/GROOVY-10373</a>
-<br>
-<b>Date found</b>:
-2021-11-17
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.CompileStatic
-class Main<I extends B<Character>> {
-  void main() {
-    C<I> x = (C<I>) null
-    x.foo().bar(null)
-  }
-}
-class A<I, E extends I>  {
-  void bar(E y) {}
-}
-class B<T> {}
-class C<S extends B<Character>> {
-  A<S, ? extends S> foo() { (A<S, ? extends S>) null}
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Use-site variance, Bounded type parameter
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#3 STC does not perform boxing when overriding method using a parameterized class with bounded type parameters 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10365">https://issues.apache.org/jira/browse/GROOVY-10365</a>
-<br>
-<b>Date found</b>:
-2021-11-12
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-interface I {
-  double m(Integer x);
-}
-class A<T extends Number, Y> implements I {
-  public double m(Integer x) {
-    return 10.0;
-  }
-}
-class B<T extends I> {
-  public int f;
-  double m2(A<Float, ? extends T> x) {
-    return x.m(f);
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Use-site variance, Bounded type parameter, Primitive type, Overriding
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#4 STC does not type check method call when using bounded type parameter as a type argument 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10364">https://issues.apache.org/jira/browse/GROOVY-10364</a>
-<br>
-<b>Date found</b>:
-2021-11-12
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T> {
-  void m(B<T> x, T y) {}
-}
-class B<T> {}
-class Test<X, Y extends X> {
-  void m() {
-    A<Y> x = new A<Y>();
-    x.m(new B<Y>(), (Y) null);
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Bounded type parameter
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#5 STC produces compile-time error on encoutering bounded type parameter with conditional 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10363">https://issues.apache.org/jira/browse/GROOVY-10363</a>
-<br>
-<b>Date found</b>:
-2021-11-12
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Supplier;
-class A {
-  static final <X extends Supplier<Number>> X m(X x, X y) {
-    X z = (true) ? x : y
-    z
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized type, Use-site variance, Parameterized function, Bounded type parameter, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#6 STC reports an unexpected method ambiguity 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10362">https://issues.apache.org/jira/browse/GROOVY-10362</a>
-<br>
-<b>Date found</b>:
-2021-11-11
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-interface I<W, Y, B extends W> {
-  Y m(Y x, B y);
-}
-interface I2<S extends Boolean, M> extends I<S, S, S> {}
-interface I3<J> extends I2<Boolean, J> {}
-interface I4<X extends Number> extends I3<X> {}
-class B implements I4<Number> {
-  public Boolean m(Boolean x, Boolean y) {
-    return false;
-  }
-}
-abstract class C<T1 extends Integer, T2 extends T1> extends B {}
-public class Test {
-  void test() {
-    B x = bar();
-    x.m(true, false);
-  }
-  C<Integer, Integer> bar() {
-    return null;
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter, Inheritance, Overriding, Subtyping, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#7 Unable to resole method after LUB operator  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10358">https://issues.apache.org/jira/browse/GROOVY-10358</a>
-<br>
-<b>Date found</b>:
-2021-11-10
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-14
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-interface I {
-  int m(int x);
-}
-abstract class A implements I {
-}
-class B<T> extends A {
-  public int m(int x) {
-    return x + 1;
-  }
-}
-public class C<T> extends A {
-  public int m(int x) {
-    return x - 1;
-  }
-}
-class Test {
-  void test() {
-    C<String> x = null;
-    int y = 1;
-    ((true) ? x : new B<String>()).m(y);
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Overriding, Inheritance, Parameterized class, Parameterized type, Primitive type, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#8 STC crashes on compiling an abstract method with default arguments and lambda  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10357">https://issues.apache.org/jira/browse/GROOVY-10357</a>
-<br>
-<b>Date found</b>:
-2021-11-10
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-14
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-abstract class A {
-  abstract Long m(Function<Boolean, Integer> x = { Boolean x -> x ? 10: -10})
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Lambda, Function type, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#9 STC rejects program on compiling constructor initialization with a wildcard type  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10337">https://issues.apache.org/jira/browse/GROOVY-10337</a>
-<br>
-<b>Date found</b>:
-2021-11-01
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-11-03
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T1, T2> {
-  A(A<T2, ? extends T2> y) {}
-}
-class Test<T> {
-  void test() {
-    A<Number, T> x = new A<Number, T>((A<T, T>) null);
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Use-site variance
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#10 STC crashes when passing method reference to an inner closure  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10336">https://issues.apache.org/jira/browse/GROOVY-10336</a>
-<br>
-<b>Date found</b>:
-2021-10-31
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-11-01
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-import java.util.function.Supplier;
-abstract class Test {
-  void test() {
-    Supplier<Long> keystone = () -> {
-      Closure<Long> inner = (Object evolve, Supplier<Integer> x) -> null 
-      inner(new Object(), new B()::m).f
-    }
-  }
-}
-class A {
-  Long f
-}
-class B {
-  Integer m() {1}
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Function type, Function reference, Lambda
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#11 STC instantiates type variable with a wrong type when calling an instance method of the same class  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10330">https://issues.apache.org/jira/browse/GROOVY-10330</a>
-<br>
-<b>Date found</b>:
-2021-10-26
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-30
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-class A<T> {
-  T y;
-  void foo(T x, Function<T, T> func) {
-    foo((true) ? x : y, func)
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Conditionals, Parameterized class, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#12 Compiler crash when combining closure with function reference  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10327">https://issues.apache.org/jira/browse/GROOVY-10327</a>
-<br>
-<b>Date found</b>:
-2021-10-22
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-30
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-@groovy.transform.TypeChecked
-class A<X, Y> {
-  void a() {
-    Closure<Integer> x = { Function<Integer, Integer> x -> 1};
-    B b = new B();
-    x(b::b);
-  }
-}
-class B {
-  Integer b(Integer x) { return null; }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Lambda, Function reference, Function type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#13 Compiler crashes on parameterized function with duplicate type variables  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10323">https://issues.apache.org/jira/browse/GROOVY-10323</a>
-<br>
-<b>Date found</b>:
-2021-10-21
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-30
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A {
-  <T, T> T foo(T t) { return t; }
-}
-class C<T> {}
-class B {
-  void test() {
-    (new A()).foo(new C<String>());
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Parameterized function
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#14 Type variable of function does not shadow the corresponding type variable of class  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10322">https://issues.apache.org/jira/browse/GROOVY-10322</a>
-<br>
-<b>Date found</b>:
-2021-10-21
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-11-04
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T> {
-  <T> T foo(T t) { return t; }
-}
-class B {
-  void bar(int x) {}
-  void test() {
-    int x = (new A<String>()).foo(1);
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Parameterized function, Type argument inference
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#15 Type variable substitution does not work properly on parameterized function's return type  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10317">https://issues.apache.org/jira/browse/GROOVY-10317</a>
-<br>
-<b>Date found</b>:
-2021-10-19
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-11-01
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T1, T2> {
-  void m1(T1 x) {}
-  void test() {
-    var x = new B();
-    T2 y = null;
-    (new A<T2, T2>()).m1(x.m2(y));
-  }
-}
-class B {
-  <X, Y> X m2(Y x) { return null; }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Parameterized function
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#16 Unable to infer type variable of parameterized function that expects two parameters  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10315">https://issues.apache.org/jira/browse/GROOVY-10315</a>
-<br>
-<b>Date found</b>:
-2021-10-18
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-11-01
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T> {
-  void m(T x) {}
-  <T2> T m2() {
-    return null;
-  }
-}
-class Main {
-  <T> void m1() {
-    A<T> x = new A<T>();
-    m3(m2(), x.m2()); // does not work
-  }
-  <T> T m2() {
-    return null;
-  }
-  <T> void m3(T x, T y) {}
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Parameterized function
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#17 Improper type variable substitution when involving type parameters with conficting names  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10309">https://issues.apache.org/jira/browse/GROOVY-10309</a>
-<br>
-<b>Date found</b>:
-2021-10-15
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-11-01
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T, Y> {
-  T f1;
-  Y f2;
-  A(T f1, Y f2) {
-    this.f1 = f1;
-    this.f2 = f2;
-  }
-}
-class C<T, X> {
-  void test() {
-    A<X, T> x = new A<X, T>((X) null, (T) null);
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#18 STC rejects program when assigning a closure that returns a class field  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10306">https://issues.apache.org/jira/browse/GROOVY-10306</a>
-<br>
-<b>Date found</b>:
-2021-10-14
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-30
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Supplier;
-class Main {
-    byte x = 1;
-    void foo() {
-        Supplier<Number> y =  () -> x;
-    }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Lambda, Function type, Subtyping, Primitive type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#19 Cannot assign type parameter whose bound is a parameterized type that takes a wildcard  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10283">https://issues.apache.org/jira/browse/GROOVY-10283</a>
-<br>
-<b>Date found</b>:
-2021-10-05
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-10
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T1, T2> {}
-class B<T1 extends Number, T2 extends A<C, ? extends T1>> {
-  T2 f;
-  B(T2 f) {
-    this.f  = f;
-  }
-}
-class C {}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Use-site variance, Bounded type parameter
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#20 Type variable substitution does not work well when running into chain of field accesses  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10280">https://issues.apache.org/jira/browse/GROOVY-10280</a>
-<br>
-<b>Date found</b>:
-2021-10-04
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-10
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<T> {
-  T foo() {
-    new Bar<T>().f1.f2.f3;
-  }
-}
-class Bar<Y> {
-  Baz<Y> f1;
-}
-class Baz<T> {
-  Qux<T> f2;
-}
-class Qux<X> {
-  X f3;
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#21 Wrong inference when using ternary operator with lambdas 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10272">https://issues.apache.org/jira/browse/GROOVY-10272</a>
-<br>
-<b>Date found</b>:
-2021-09-29
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-@groovy.transform.TypeChecked
-class Main {
-    public static final void main() {
-        Function<Long, Double> x
-        // Works
-        if (true) {
-            x = {Long a -> (Double) a}
-        } else {
-            x = {Long b -> (Double) b}
-        }
-        // Fails
-        Function<Long, Double> y = ((true) ? {Long a -> (Double) a} : {Long b -> (Double) b})
-    }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Function type, Conditionals, Lambda
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#22 Wrong inference when using ternary operator with closure and variable 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10271">https://issues.apache.org/jira/browse/GROOVY-10271</a>
-<br>
-<b>Date found</b>:
-2021-09-29
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Supplier;
-@groovy.transform.TypeChecked
-class Main {
-  static final void foo(Supplier<Integer> x) {}
-  public static final void main() {
-      Supplier<Integer> y = { -> 5 }
-      Supplier<Integer> z = (true) ? y : {-> 5}
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Lambda, Function type, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#23 Cannot initialize parameterized class with lambda without cast 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10270">https://issues.apache.org/jira/browse/GROOVY-10270</a>
-<br>
-<b>Date found</b>:
-2021-09-29
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-@groovy.transform.TypeChecked
-class Main {
-   static final void foo(Function<Short, Byte> x) {}
-   public static final void main() {
-     foo({Short y -> (Byte) y}) // works
-     Cls cls = new Cls({Short y -> (Byte) y}) // works
-     PCls<Function<Short, Byte>> pcls1 = new PCls<Function<Short, Byte>>({Short y -> (Byte) y} as Function<Short, Byte>) // works
-     PCls<Function<Short, Byte>> pcls2 = new PCls<Function<Short, Byte>>({Short y -> (Byte) y}) // fails
-   }
-}
-class Cls {
-  public Function<Short, Byte> f
-  public Cls(Function<Short, Byte> f) {
-     this.f = f
-  }
-}
-class PCls <T> {
-   public T f
-   public PCls(T f) {
-      this.f = f
-   }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Function type, Lambda, Parameterized class, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#24 Unable to assign variable in parameterized class with bounded polymorphism  
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10268">https://issues.apache.org/jira/browse/GROOVY-10268</a>
-<br>
-<b>Date found</b>:
-2021-09-28
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Duplicate
-<br>
-<b>Resolution date</b>:
-2021-09-28
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.TypeChecked
-class Cls<T, Z extends T> {
-  public final Z foo
-  public Upbeat(Z foo) {
-    this.foo = foo
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#25 STC reports wrong message when encoutering wildcard types 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10267">https://issues.apache.org/jira/browse/GROOVY-10267</a>
-<br>
-<b>Date found</b>:
-2021-09-27
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T> {}
-class B {
-  A<? extends Object> test() {
-    return test2();
-  }  A<? extends Object> test2() {
-    return null;
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Use-site variance
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#26 STC: cannot return closure from method without casting  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10254">https://issues.apache.org/jira/browse/GROOVY-10254</a>
-<br>
-<b>Date found</b>:
-2021-09-23
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-09-26
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Supplier;
-@groovy.transform.TypeChecked
-public class Main {
-    public static Supplier<Integer> foo() {
-        { -> 10} as Supplier<Integer> // works
-    }
-    public static Supplier<Integer> bar() {
-        { -> 10} //fails
-    }
-    public static void main(String[] args) {
-        Supplier<Integer> v1 = { -> 10} as Supplier<Integer> // works
-        Supplier<Integer> v2 = { -> 10} // works
-        Supplier<Integer> v3 = foo()
-        Supplier<Integer> v4 = bar()
-    }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Function type, Lambda
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#27 Unexpected generics parameter arity mismatch in the "instruction selection" phase  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10230">https://issues.apache.org/jira/browse/GROOVY-10230</a>
-<br>
-<b>Date found</b>:
-2021-09-13
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-11-04
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<T1, T2> {}
-class A {
-  <T extends Foo<Number, Number>> T m(T x) {
-    x
-  }
-}
-class B extends A {
-  <T extends Foo<Number, Number>> T m(T x) {
-    T z = null;
-    super.m((true) ? z : z)
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized function, Parameterized class, Parameterized type, Bounded type parameter, Inheritance, Overriding, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#28 STC computes an imprecise LUB when involving two parameterized types implementing the same interface 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10227">https://issues.apache.org/jira/browse/GROOVY-10227</a>
-<br>
-<b>Date found</b>:
-2021-09-13
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A {
-  void foo(I x) {}
-}
-interface I {}
-interface I2 extends I {}
-class B<T> implements I2 {}
-class C<T> implements I {}
-class Main {
-  public static void main(String[] args) {
-    (new A()).foo((true) ? new B<String>() : new C<String>());
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Subtyping, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#29 LUB is computed incorrectly when involving bounded type variables  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10226">https://issues.apache.org/jira/browse/GROOVY-10226</a>
-<br>
-<b>Date found</b>:
-2021-09-13
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-14
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<T> {}class Main {
-  static final <T extends Foo<String>> T test() {
-    final T x = null;
-    true ? (T) null: x
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized function, Bounded type parameter, Parameterized type, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#30 Unexpected NullPointerException during the "instruction selection" phase  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10225">https://issues.apache.org/jira/browse/GROOVY-10225</a>
-<br>
-<b>Date found</b>:
-2021-09-13
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-09-27
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<Z> {
-  final Z foo(Z x) {
-    null;
-  }
-}
-final class Bar<Y> {  final Foo<Y> bar() {
-    new Foo<>()
-  }
-}
-class Main {
-  static final <F_O extends Number, F_X extends F_O> void test() {
-    final F_X x = (F_X) null
-    (new Bar<F_O>()).bar().foo(((false) ? x : (F_X) null))
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Parameterized function, Bounded type parameter, Subtyping, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#31 Unable to infer the type parameter of a parameterized function  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10222">https://issues.apache.org/jira/browse/GROOVY-10222</a>
-<br>
-<b>Date found</b>:
-2021-09-10
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-12
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A {
-    static <T> T foo() {
-        return null;
-    }
-}
-class Test<T> {
-    void bar() {
-        T x = A.foo();
-    }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized function, Parameterized class
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#32 Unexpected type mismatch when having conflicting type parameter names  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10220">https://issues.apache.org/jira/browse/GROOVY-10220</a>
-<br>
-<b>Date found</b>:
-2021-09-10
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-09-21
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<X, T extends Number> {}
-class B<T> {
-  A<? extends T, Number> x;
-  B(A<? extends T, Number> x) {
-    this.x = x;
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter, Use-site variance, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#33 Unexpected type mismatch when combining conditional and bounded type parameter  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10158">https://issues.apache.org/jira/browse/GROOVY-10158</a>
-<br>
-<b>Date found</b>:
-2021-06-30
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-14
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A<T> {}
-class B<T extends A<String>> {
-  T m() {
-    final T x = null;
-    final T y = null;
-    (true) ? y : x
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Bounded type parameter, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#34 STC: cannot combine use-variance with bounded polymorphism 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10153">https://issues.apache.org/jira/browse/GROOVY-10153</a>
-<br>
-<b>Date found</b>:
-2021-06-28
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.TypeChecked
-class Test {
-  public void m() {
-    Foo<? super C> x = new Foo<B>();
-  }
-}
-class A {}
-class B extends A {}
-class C extends B {}
-class Foo<T extends A> {
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Use-site variance, Bounded type parameter, Inheritance, Subtyping
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#35 Flow typing does not work when && is combinded with instanceof  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10130">https://issues.apache.org/jira/browse/GROOVY-10130</a>
-<br>
-<b>Date found</b>:
-2021-06-08
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-15
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.TypeChecked
-class Test {
-  public void foo(Foo x) {
-    ((true && x instanceof Bar)) ? new Bar[]{x} : null
-  }
-}
-class Foo {}
-class Bar extends Foo {}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Inheritance, Subtyping, Flow typing, Conditionals, Array
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#36 Cannot assign closure with long as return type to java.util.function.Function<X, Number>  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10128">https://issues.apache.org/jira/browse/GROOVY-10128</a>
-<br>
-<b>Date found</b>:
-2021-06-08
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-30
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-@groovy.transform.TypeChecked
-class Main {
-  public static void main(String[] args) {
-      Function<String, Number> x = { y ->
-          final long d = 1;
-          return d;
-      };
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Function type, Primitive type, Subtyping, Lambda
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#37 FP Cycle detected in type parameter that extends another type parameter  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10125">https://issues.apache.org/jira/browse/GROOVY-10125</a>
-<br>
-<b>Date found</b>:
-2021-06-07
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-06-07
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.TypeChecked
-class Test<X, Y extends X> {}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#38 STC: error when passing a type parameter in type constructor  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10116">https://issues.apache.org/jira/browse/GROOVY-10116</a>
-<br>
-<b>Date found</b>:
-2021-05-27
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-15
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.TypeChecked
-class Test<T> {
-  public void foo() {
-    Foo<T, Long> x = new Foo<T, Long>(new Bar<T, Long>());
-  }
-}
-class Foo<X, T> {
-  public Foo(Bar<X, T> y) {}
-}
-class Bar<X, T> {}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#39 STC: compiler error when using type parameter with extends  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10115">https://issues.apache.org/jira/browse/GROOVY-10115</a>
-<br>
-<b>Date found</b>:
-2021-05-27
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-15
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.TypeChecked
-class Bar<L, T extends L> {
-    T x;
-    public Bar(T x) {
-      this.x = x;
-    }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#40 StackOverflowError in STC  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10113">https://issues.apache.org/jira/browse/GROOVY-10113</a>
-<br>
-<b>Date found</b>:
-2021-05-27
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-06-06
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.TypeChecked
-class Test<T extends T> {}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#41 compiler crash during canonicalization  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10111">https://issues.apache.org/jira/browse/GROOVY-10111</a>
-<br>
-<b>Date found</b>:
-2021-05-26
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-05-26
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<X, Y> {}
-class Bar<X extends Foo<Number, String>> {
-  X[] m() {
-    new X[]{new Foo<Number, String>()}
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Bounded type parameter, Subtyping, Array
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#42 Cannot assign null to a variable with a bounded generic type  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10107">https://issues.apache.org/jira/browse/GROOVY-10107</a>
-<br>
-<b>Date found</b>:
-2021-05-25
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-06-04
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-final class Test<T extends Number> {
-  final void m() {
-    T v = null;
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#43 groovyc infers the wrong type when using a method reference of a function with varargs  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10100">https://issues.apache.org/jira/browse/GROOVY-10100</a>
-<br>
-<b>Date found</b>:
-2021-05-20
-<br>
-<b>Status</b>:
-Resolved
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2022-03-14
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-class Foo<T> {
-    public T method(Object... args) {
-      return null;
-    }
-}
-class Bar {
-    public static <T extends Number> void test(T a) {
-        Foo<T> x = new Foo<>();
-        Function<String[], T> b = x::method;
-        T y = b.apply(new String[] {"str"});
-    }
-}
-public class Main {
-  public static void main(String[] args) {
-    Bar.test(1);
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Variable arguments, Parameterized function, Bounded type parameter, Function reference, Function type, Array
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#44 Unexpected behaviour when the return type of a closure is a type parameter  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10098">https://issues.apache.org/jira/browse/GROOVY-10098</a>
-<br>
-<b>Date found</b>:
-2021-05-19
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-05-20
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<T extends Number> {
-  T f  Foo(T f) {
-    this.f = f
-  }
-  T foo() {
-    Closure<T> clos = { -> f}
-    clos()
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter, Function type, Lambda
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#45 Incompatible generic argument types on closure's return type  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10091">https://issues.apache.org/jira/browse/GROOVY-10091</a>
-<br>
-<b>Date found</b>:
-2021-05-17
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-05-18
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<T> {}
-class Bar<T> extends Foo<Integer> {}
-class Baz extends Foo<Integer> {}
-public class Main {
-  public static void main(String[] args) {
-    Closure<Foo<Integer>> z = { -> new Baz()} // this works
-    Closure<Foo<Integer>> f = { -> new Bar<String>()} // this doesn't work
-  } 
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Subtyping, Lambda, Function type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#46 STC does not perform boxing on chars when encountering assignment and function call  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10087">https://issues.apache.org/jira/browse/GROOVY-10087</a>
-<br>
-<b>Date found</b>:
-2021-05-13
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-05-16
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-public class Main {
-    public static void main(String[] args) {
-      Character c = foo();
-    }
-    public static char foo() {
-      'd' as char
-    }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Primitive type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#47 Incompatible generic argument types when combining subtyping and closures  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10082">https://issues.apache.org/jira/browse/GROOVY-10082</a>
-<br>
-<b>Date found</b>:
-2021-05-12
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-05-15
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A {}
-class B extends A {}
-class Main {
-  public static void main(String[] args) {
-    Closure<A> cls = { -> {
-      final A x = new B()
-      x
-    }}
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Inheritance, Subtyping, Lambda, Function type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#48 Conversion from int to byte does not work in case of ternary operator 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10081">https://issues.apache.org/jira/browse/GROOVY-10081</a>
-<br>
-<b>Date found</b>:
-2021-05-11
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.CompileStatic
-public class Main {
-  static byte x = 1;
-  public static byte foo() {
-    1
-  }
-  public static void main(String[] args) {
-    x = (true) ? 0 : foo() // this does not work
-    // the following works
-    if (true) {
-      x = 0
-    } else {
-      x = foo()
-    }
-    byte y = (true) ? 0 : foo() // this doesn't work as well
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Primitive type, Conditionals
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#49 groovyc does not perform unboxing on Character type  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10079">https://issues.apache.org/jira/browse/GROOVY-10079</a>
-<br>
-<b>Date found</b>:
-2021-05-10
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-05-11
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-public class Main {
-  public static char foo() {
-    return (Character) 'd';
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Primitive type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#50 Compiler crash when encountering function reference on nested class  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-10033">https://issues.apache.org/jira/browse/GROOVY-10033</a>
-<br>
-<b>Date found</b>:
-2021-04-12
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-04-26
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo {
-  protected Foo(Closure<Foo, Bar> x) {}
-}
-class Bar {
-    Bar(Foo x) {}
-}
-public class X extends Foo {
-    public X() {
-        super(Y::new);
-    }
-    private class Y extends Bar {
-        Y(Foo x) {
-            super(x);
-        }
-    }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Inheritance, Function reference, Function type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#51 Inconsistency in handling of numeric types 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-9979">https://issues.apache.org/jira/browse/GROOVY-9979</a>
-<br>
-<b>Date found</b>:
-2021-03-11
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-public class Main {
-  public static void foo() {
-    final Byte f = (Float) 32.3 // possible loss of precision
-    baz((Float) 13.3) // cannot find matching method
-  }
-  public static Byte bar() {
-    return (Float) 4324141.4 // does not report error.
-  }
-  public static void baz(Byte x) {}
-}
-</xmp>
-</pre>
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#52 STC: Access to field/property is forbidden after instanceof.  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-9967">https://issues.apache.org/jira/browse/GROOVY-9967</a>
-<br>
-<b>Date found</b>:
-2021-03-05
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-03-07
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Test {
-  static void main(String[] args) {
-    println(C.func4(new B()))
-  }
-}
-class A {}
-class B extends A {
-  // It has the same behavior if f is a field instead of a property.
-  String f = "foo"
-}
-@groovy.transform.CompileStatic
-class C {
-  static String func1(Object x) {
-    (x instanceof String) ? x : "foo" // Compiles
-  }
-  static String func2(B x) {
-    x.f // Compiles
-  }
-  static String func3(B x) {
-    (x instanceof B) ? x.f : "foo" // Compiles
-  }
-  static String func4(A x) {
-    (x instanceof B) ? x.f : "foo" // Does not compile
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Inheritance, Subtyping, Flow typing
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#53 Cannot pass numeric constant to a method with a generic type 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-9947">https://issues.apache.org/jira/browse/GROOVY-9947</a>
-<br>
-<b>Date found</b>:
-2021-02-16
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.TypeChecked
-class Main {
-  public static final void main(String[] args) {
-    final A<Float> a = new A<Float>()
-    a.foo(10)
-    a.bar(10) // Fails here
-  }
-}
-final class A<T> {
-  final void foo(Float x) {}
-  final void bar(T x) {}
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#54 STC: Cannot find matching method when using Generics  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-9945">https://issues.apache.org/jira/browse/GROOVY-9945</a>
-<br>
-<b>Date found</b>:
-2021-02-16
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-03-02
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-interface I1<X, Y> {}
-interface I2 extends I1<Character, Character> {}
-class Foo<X, Y> implements I2 {
-  public void foo(X x, Y y) {}
-}
-class Bar<X, Y> extends Foo<X, Y> {}
-@groovy.transform.TypeChecked
-class Main {
-  public static void foo() {
-    new Bar<Float, Integer>().foo((Float) 1.4, -1)
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#55 !instanceof inference does not work 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://issues.apache.org/jira/browse/GROOVY-9931">https://issues.apache.org/jira/browse/GROOVY-9931</a>
-<br>
-<b>Date found</b>:
-2021-02-08
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-@groovy.transform.CompileStatic
-class Main {
-    static Integer bar(Object o) {
-        if (o !instanceof Integer) {
-            return 0
-        } else {
-            return o
-        }
-    }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Flow typing
-<br>
-<br>
-</details>
-</li>
-</ul>
-
 <h3>Kotlin</h3>
 
 <ul>
 <li>
 <b>
-#56 JVM IR: "IndexOutOfBoundsException: Cannot pop operand off an empty stack" on compiling unused identity equality of Double literals  -- Fixed
+#1 JVM IR: "IndexOutOfBoundsException: Cannot pop operand off an empty stack" on compiling unused identity equality of Double literals  -- Fixed
 </b>
 
 <details>
@@ -2582,12 +55,21 @@ fun m(): Unit
 </pre>
 
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/9091ca7b510'>https://github.com/JetBrains/kotlin/commit/9091ca7b510</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#57 NI: NullPointerException on compiling anonymous function returning a method reference 
+#2 NI: NullPointerException on compiling anonymous function returning a method reference 
 </b>
 
 <details>
@@ -2627,13 +109,14 @@ fun test() {
 </pre>
 <b>Test Case Characteristics</b>:
 SAM type, Function type, Function reference, Lambda
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#58 Support SAM conversions on value parameters inferred into Kotlin functional interface 
+#3 Support SAM conversions on value parameters inferred into Kotlin functional interface 
 </b>
 
 <details>
@@ -2668,13 +151,14 @@ fun main() {
 </pre>
 <b>Test Case Characteristics</b>:
 SAM type, Parameterized function, Lambda
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#59 IllegalStateException through `PositioningStrategies$SECONDARY_CONSTRUCTOR_DELEGATION_CALL$1.mark` caused by inner enum  -- Fixed
+#4 IllegalStateException through `PositioningStrategies$SECONDARY_CONSTRUCTOR_DELEGATION_CALL$1.mark` caused by inner enum  -- Fixed
 </b>
 
 <details>
@@ -2708,12 +192,24 @@ interface Foo<T> {
 <b>Test Case Characteristics</b>:
 Parameterized class
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/ae4dd80254f'>https://github.com/JetBrains/kotlin/commit/ae4dd80254f</a>
+</li>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/8068a5439fe'>https://github.com/JetBrains/kotlin/commit/8068a5439fe</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#60 JVM / IR: "AssertionError: Primitive array expected: CLASS IR_EXTERNAL_DECLARATION_STUB CLASS"  -- Fixed
+#5 JVM / IR: "AssertionError: Primitive array expected: CLASS IR_EXTERNAL_DECLARATION_STUB CLASS"  -- Fixed
 </b>
 
 <details>
@@ -2746,12 +242,21 @@ class A
 <b>Test Case Characteristics</b>:
 Array, Subtyping
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/23420ecf7a6'>https://github.com/JetBrains/kotlin/commit/23420ecf7a6</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#61 SAM conversions by expected type 
+#6 SAM conversions by expected type 
 </b>
 
 <details>
@@ -2799,13 +304,14 @@ fun foo() {
 </pre>
 <b>Test Case Characteristics</b>:
 SAM type, Lambda, Function reference, Function type
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#62 TYPE_MISMATCH error when applying `fun interface` in the initialization of a type constructor 
+#7 TYPE_MISMATCH error when applying `fun interface` in the initialization of a type constructor 
 </b>
 
 <details>
@@ -2847,13 +353,14 @@ fun foo() {
 </pre>
 <b>Test Case Characteristics</b>:
 SAM type, Parameterized class, Lambda
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#63 Inconsistency in overload resolution when calling a scope function 
+#8 Inconsistency in overload resolution when calling a scope function 
 </b>
 
 <details>
@@ -2893,13 +400,14 @@ fun main() {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized function, Function type
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#64 JVM IR: "AnalyzerException: Argument 1: expected I, but found R" when assigning an array of numbers to an Any variable 
+#9 JVM IR: "AnalyzerException: Argument 1: expected I, but found R" when assigning an array of numbers to an Any variable 
 </b>
 
 <details>
@@ -2930,13 +438,14 @@ val x: Any = arrayOf<Number>(-74, -43)
 </pre>
 <b>Test Case Characteristics</b>:
 Subtyping, Array
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#65 NI: Unexpected TYPE_MISMATCH when combining nested conditional and contravariant type argument 
+#10 NI: Unexpected TYPE_MISMATCH when combining nested conditional and contravariant type argument 
 </b>
 
 <details>
@@ -2970,13 +479,14 @@ fun main() {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Use-site variance, Conditionals, Subtyping
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#66 TYPE_MISMATCH when combining use-site variance with bounded polymorphism 
+#11 TYPE_MISMATCH when combining use-site variance with bounded polymorphism 
 </b>
 
 <details>
@@ -3010,13 +520,14 @@ fun main() {
 </pre>
 <b>Test Case Characteristics</b>:
 Inheritance, Parameterized class, Parameterized type, Use-site variance, Bounded type parameter, Subtyping
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#67 NI: Wrong type is inferred on combining conditional and contravariant type argument 
+#12 NI: Wrong type is inferred on combining conditional and contravariant type argument 
 </b>
 
 <details>
@@ -3052,13 +563,14 @@ fun main() {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Use-site variance
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#68 False positive "NOTHING_TO_OVERRIDE" when combining varargs with type parameters 
+#13 False positive "NOTHING_TO_OVERRIDE" when combining varargs with type parameters 
 </b>
 
 <details>
@@ -3090,13 +602,14 @@ class B: A<Float>() {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Inheritance, Overriding, Variable arguments
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#69 "Unexpected tokens" when `if` statement contains double parenthesis in variable assignment 
+#14 "Unexpected tokens" when `if` statement contains double parenthesis in variable assignment 
 </b>
 
 <details>
@@ -3123,13 +636,14 @@ Unexpected compile-time error
 </pre>
 <b>Test Case Characteristics</b>:
 Conditionals
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#70 JVM IR: "AnalyzerException: Argument 1: expected I, but found R" on compiling a method with a generic default argument whose bound is a primitive  -- Fixed
+#15 JVM IR: "AnalyzerException: Argument 1: expected I, but found R" on compiling a method with a generic default argument whose bound is a primitive  -- Fixed
 </b>
 
 <details>
@@ -3168,12 +682,21 @@ class Test<T: Char> {
 <b>Test Case Characteristics</b>:
 Parameterized class, Bounded type parameter
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/7fd033adaea'>https://github.com/JetBrains/kotlin/commit/7fd033adaea</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#71 JVM IR: ACCIDENTAL_OVERRIDE when overriding a generic field where the type parameter has a primitive bound  -- Fixed
+#16 JVM IR: ACCIDENTAL_OVERRIDE when overriding a generic field where the type parameter has a primitive bound  -- Fixed
 </b>
 
 <details>
@@ -3207,6 +730,18 @@ class C(override var x: Char): B<Char>('x')
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Inheritance, Overriding, Bounded type parameter
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/e1a75f82031'>https://github.com/JetBrains/kotlin/commit/e1a75f82031</a>
+</li>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/b262d09a81b'>https://github.com/JetBrains/kotlin/commit/b262d09a81b</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
@@ -3217,7 +752,7 @@ Parameterized class, Parameterized type, Inheritance, Overriding, Bounded type p
 <ul>
 <li>
 <b>
-#72 StackOverflowError on computing the GLB 
+#17 StackOverflowError on computing the GLB 
 </b>
 
 <details>
@@ -3255,13 +790,14 @@ abstract class C<N extends A<Number>> {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Bounded type parameter, Use-site variance
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#73 Cannot assign method reference to Generic Function Interface 
+#18 Cannot assign method reference to Generic Function Interface 
 </b>
 
 <details>
@@ -3327,13 +863,14 @@ interface Function1<P, R> {
 </pre>
 <b>Test Case Characteristics</b>:
 SAM type, Function type, Use-site variance, Lambda, Subtyping, Function reference
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#74 AssertionError when combining pattern matching and function closure  -- Fixed
+#19 AssertionError when combining pattern matching and function closure  -- Fixed
 </b>
 
 <details>
@@ -3375,12 +912,21 @@ class B extends A {
 <b>Test Case Characteristics</b>:
 Function type, Flow typing, Lambda
 <br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/openjdk/jdk/commit/9e75f922b17'>https://github.com/openjdk/jdk/commit/9e75f922b17</a>
+</li>
+
+</ul>
+
+<br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#75 Compile-time error when using wildcard as type argument 
+#20 Compile-time error when using wildcard as type argument 
 </b>
 
 <details>
@@ -3424,13 +970,14 @@ class ClsC {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Bounded type parameter, Use-site variance
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#76 Misleading report with type variables when extending one of the type arguments 
+#21 Misleading report with type variables when extending one of the type arguments 
 </b>
 
 <details>
@@ -3460,13 +1007,14 @@ class Bar<T1, T2> {
 </pre>
 <b>Test Case Characteristics</b>:
 Parameterized class, Parameterized type, Bounded type parameter
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#77 javac crashes at com.sun.tools.javac.code.Types$7.visitType with AssertionError 
+#22 javac crashes at com.sun.tools.javac.code.Types$7.visitType with AssertionError 
 </b>
 
 <details>
@@ -3503,13 +1051,14 @@ public class Test
 </pre>
 <b>Test Case Characteristics</b>:
 Conditionals, Lambda
+
 <br>
 <br>
 </details>
 </li>
 <li>
 <b>
-#78 Unexpected compile-time error when combining generic function and function ref 
+#23 Unexpected compile-time error when combining generic function and function ref 
 </b>
 
 <details>
@@ -3547,6 +1096,2737 @@ class Test {
 </pre>
 <b>Test Case Characteristics</b>:
 Function type, Parameterized function, Function reference
+
+<br>
+<br>
+</details>
+</li>
+</ul>
+
+<h3>Groovy</h3>
+
+<ul>
+<li>
+<b>
+#24 Incorrect inference of type argument of parameterized method call  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10482">https://issues.apache.org/jira/browse/GROOVY-10482</a>
+<br>
+<b>Date found</b>:
+2022-02-15
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-12
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T> {
+  Foo(T x) {}
+}
+class Main  {
+  static <T> void bar() {
+    new Foo<T>(baz());
+  }
+  static <Z> Z baz() {
+    return null;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized function, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#25 STC cannot compile program with multiple bounded type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10373">https://issues.apache.org/jira/browse/GROOVY-10373</a>
+<br>
+<b>Date found</b>:
+2021-11-17
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.CompileStatic
+class Main<I extends B<Character>> {
+  void main() {
+    C<I> x = (C<I>) null
+    x.foo().bar(null)
+  }
+}
+class A<I, E extends I>  {
+  void bar(E y) {}
+}
+class B<T> {}
+class C<S extends B<Character>> {
+  A<S, ? extends S> foo() { (A<S, ? extends S>) null}
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Use-site variance, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#26 STC does not perform boxing when overriding method using a parameterized class with bounded type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10365">https://issues.apache.org/jira/browse/GROOVY-10365</a>
+<br>
+<b>Date found</b>:
+2021-11-12
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+interface I {
+  double m(Integer x);
+}
+class A<T extends Number, Y> implements I {
+  public double m(Integer x) {
+    return 10.0;
+  }
+}
+class B<T extends I> {
+  public int f;
+  double m2(A<Float, ? extends T> x) {
+    return x.m(f);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance, Use-site variance, Bounded type parameter, Primitive type, Overriding
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#27 STC does not type check method call when using bounded type parameter as a type argument 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10364">https://issues.apache.org/jira/browse/GROOVY-10364</a>
+<br>
+<b>Date found</b>:
+2021-11-12
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {
+  void m(B<T> x, T y) {}
+}
+class B<T> {}
+class Test<X, Y extends X> {
+  void m() {
+    A<Y> x = new A<Y>();
+    x.m(new B<Y>(), (Y) null);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#28 STC produces compile-time error on encoutering bounded type parameter with conditional 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10363">https://issues.apache.org/jira/browse/GROOVY-10363</a>
+<br>
+<b>Date found</b>:
+2021-11-12
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+class A {
+  static final <X extends Supplier<Number>> X m(X x, X y) {
+    X z = (true) ? x : y
+    z
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized type, Use-site variance, Parameterized function, Bounded type parameter, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#29 STC reports an unexpected method ambiguity 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10362">https://issues.apache.org/jira/browse/GROOVY-10362</a>
+<br>
+<b>Date found</b>:
+2021-11-11
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+interface I<W, Y, B extends W> {
+  Y m(Y x, B y);
+}
+interface I2<S extends Boolean, M> extends I<S, S, S> {}
+interface I3<J> extends I2<Boolean, J> {}
+interface I4<X extends Number> extends I3<X> {}
+class B implements I4<Number> {
+  public Boolean m(Boolean x, Boolean y) {
+    return false;
+  }
+}
+abstract class C<T1 extends Integer, T2 extends T1> extends B {}
+public class Test {
+  void test() {
+    B x = bar();
+    x.m(true, false);
+  }
+  C<Integer, Integer> bar() {
+    return null;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Inheritance, Overriding, Subtyping, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#30 Unable to resole method after LUB operator  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10358">https://issues.apache.org/jira/browse/GROOVY-10358</a>
+<br>
+<b>Date found</b>:
+2021-11-10
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-14
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+interface I {
+  int m(int x);
+}
+abstract class A implements I {
+}
+class B<T> extends A {
+  public int m(int x) {
+    return x + 1;
+  }
+}
+public class C<T> extends A {
+  public int m(int x) {
+    return x - 1;
+  }
+}
+class Test {
+  void test() {
+    C<String> x = null;
+    int y = 1;
+    ((true) ? x : new B<String>()).m(y);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overriding, Inheritance, Parameterized class, Parameterized type, Primitive type, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#31 STC crashes on compiling an abstract method with default arguments and lambda  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10357">https://issues.apache.org/jira/browse/GROOVY-10357</a>
+<br>
+<b>Date found</b>:
+2021-11-10
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-14
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+abstract class A {
+  abstract Long m(Function<Boolean, Integer> x = { Boolean x -> x ? 10: -10})
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Lambda, Function type, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#32 STC rejects program on compiling constructor initialization with a wildcard type  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10337">https://issues.apache.org/jira/browse/GROOVY-10337</a>
+<br>
+<b>Date found</b>:
+2021-11-01
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-03
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T1, T2> {
+  A(A<T2, ? extends T2> y) {}
+}
+class Test<T> {
+  void test() {
+    A<Number, T> x = new A<Number, T>((A<T, T>) null);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Use-site variance
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#33 STC crashes when passing method reference to an inner closure  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10336">https://issues.apache.org/jira/browse/GROOVY-10336</a>
+<br>
+<b>Date found</b>:
+2021-10-31
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-01
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+import java.util.function.Supplier;
+abstract class Test {
+  void test() {
+    Supplier<Long> keystone = () -> {
+      Closure<Long> inner = (Object evolve, Supplier<Integer> x) -> null 
+      inner(new Object(), new B()::m).f
+    }
+  }
+}
+class A {
+  Long f
+}
+class B {
+  Integer m() {1}
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function type, Function reference, Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#34 STC instantiates type variable with a wrong type when calling an instance method of the same class  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10330">https://issues.apache.org/jira/browse/GROOVY-10330</a>
+<br>
+<b>Date found</b>:
+2021-10-26
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-30
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+class A<T> {
+  T y;
+  void foo(T x, Function<T, T> func) {
+    foo((true) ? x : y, func)
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Conditionals, Parameterized class, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#35 Compiler crash when combining closure with function reference  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10327">https://issues.apache.org/jira/browse/GROOVY-10327</a>
+<br>
+<b>Date found</b>:
+2021-10-22
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-30
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+@groovy.transform.TypeChecked
+class A<X, Y> {
+  void a() {
+    Closure<Integer> x = { Function<Integer, Integer> x -> 1};
+    B b = new B();
+    x(b::b);
+  }
+}
+class B {
+  Integer b(Integer x) { return null; }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Lambda, Function reference, Function type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#36 Compiler crashes on parameterized function with duplicate type variables  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10323">https://issues.apache.org/jira/browse/GROOVY-10323</a>
+<br>
+<b>Date found</b>:
+2021-10-21
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-30
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A {
+  <T, T> T foo(T t) { return t; }
+}
+class C<T> {}
+class B {
+  void test() {
+    (new A()).foo(new C<String>());
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#37 Type variable of function does not shadow the corresponding type variable of class  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10322">https://issues.apache.org/jira/browse/GROOVY-10322</a>
+<br>
+<b>Date found</b>:
+2021-10-21
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-04
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {
+  <T> T foo(T t) { return t; }
+}
+class B {
+  void bar(int x) {}
+  void test() {
+    int x = (new A<String>()).foo(1);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Parameterized function, Type argument inference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#38 Type variable substitution does not work properly on parameterized function's return type  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10317">https://issues.apache.org/jira/browse/GROOVY-10317</a>
+<br>
+<b>Date found</b>:
+2021-10-19
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-01
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T1, T2> {
+  void m1(T1 x) {}
+  void test() {
+    var x = new B();
+    T2 y = null;
+    (new A<T2, T2>()).m1(x.m2(y));
+  }
+}
+class B {
+  <X, Y> X m2(Y x) { return null; }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#39 Unable to infer type variable of parameterized function that expects two parameters  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10315">https://issues.apache.org/jira/browse/GROOVY-10315</a>
+<br>
+<b>Date found</b>:
+2021-10-18
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-01
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {
+  void m(T x) {}
+  <T2> T m2() {
+    return null;
+  }
+}
+class Main {
+  <T> void m1() {
+    A<T> x = new A<T>();
+    m3(m2(), x.m2()); // does not work
+  }
+  <T> T m2() {
+    return null;
+  }
+  <T> void m3(T x, T y) {}
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#40 Improper type variable substitution when involving type parameters with conficting names  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10309">https://issues.apache.org/jira/browse/GROOVY-10309</a>
+<br>
+<b>Date found</b>:
+2021-10-15
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-01
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T, Y> {
+  T f1;
+  Y f2;
+  A(T f1, Y f2) {
+    this.f1 = f1;
+    this.f2 = f2;
+  }
+}
+class C<T, X> {
+  void test() {
+    A<X, T> x = new A<X, T>((X) null, (T) null);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#41 STC rejects program when assigning a closure that returns a class field  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10306">https://issues.apache.org/jira/browse/GROOVY-10306</a>
+<br>
+<b>Date found</b>:
+2021-10-14
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-30
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+class Main {
+    byte x = 1;
+    void foo() {
+        Supplier<Number> y =  () -> x;
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Lambda, Function type, Subtyping, Primitive type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#42 Cannot assign type parameter whose bound is a parameterized type that takes a wildcard  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10283">https://issues.apache.org/jira/browse/GROOVY-10283</a>
+<br>
+<b>Date found</b>:
+2021-10-05
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-10
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T1, T2> {}
+class B<T1 extends Number, T2 extends A<C, ? extends T1>> {
+  T2 f;
+  B(T2 f) {
+    this.f  = f;
+  }
+}
+class C {}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Use-site variance, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#43 Type variable substitution does not work well when running into chain of field accesses  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10280">https://issues.apache.org/jira/browse/GROOVY-10280</a>
+<br>
+<b>Date found</b>:
+2021-10-04
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-10
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T> {
+  T foo() {
+    new Bar<T>().f1.f2.f3;
+  }
+}
+class Bar<Y> {
+  Baz<Y> f1;
+}
+class Baz<T> {
+  Qux<T> f2;
+}
+class Qux<X> {
+  X f3;
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/a3ab384dbb'>https://github.com/apache/groovy/commit/a3ab384dbb</a>
+</li>
+<li>
+<a href='https://github.com/apache/groovy/commit/ad74b73d9e'>https://github.com/apache/groovy/commit/ad74b73d9e</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#44 Wrong inference when using ternary operator with lambdas 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10272">https://issues.apache.org/jira/browse/GROOVY-10272</a>
+<br>
+<b>Date found</b>:
+2021-09-29
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+@groovy.transform.TypeChecked
+class Main {
+    public static final void main() {
+        Function<Long, Double> x
+        // Works
+        if (true) {
+            x = {Long a -> (Double) a}
+        } else {
+            x = {Long b -> (Double) b}
+        }
+        // Fails
+        Function<Long, Double> y = ((true) ? {Long a -> (Double) a} : {Long b -> (Double) b})
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function type, Conditionals, Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#45 Wrong inference when using ternary operator with closure and variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10271">https://issues.apache.org/jira/browse/GROOVY-10271</a>
+<br>
+<b>Date found</b>:
+2021-09-29
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+@groovy.transform.TypeChecked
+class Main {
+  static final void foo(Supplier<Integer> x) {}
+  public static final void main() {
+      Supplier<Integer> y = { -> 5 }
+      Supplier<Integer> z = (true) ? y : {-> 5}
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Lambda, Function type, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#46 Cannot initialize parameterized class with lambda without cast 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10270">https://issues.apache.org/jira/browse/GROOVY-10270</a>
+<br>
+<b>Date found</b>:
+2021-09-29
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+@groovy.transform.TypeChecked
+class Main {
+   static final void foo(Function<Short, Byte> x) {}
+   public static final void main() {
+     foo({Short y -> (Byte) y}) // works
+     Cls cls = new Cls({Short y -> (Byte) y}) // works
+     PCls<Function<Short, Byte>> pcls1 = new PCls<Function<Short, Byte>>({Short y -> (Byte) y} as Function<Short, Byte>) // works
+     PCls<Function<Short, Byte>> pcls2 = new PCls<Function<Short, Byte>>({Short y -> (Byte) y}) // fails
+   }
+}
+class Cls {
+  public Function<Short, Byte> f
+  public Cls(Function<Short, Byte> f) {
+     this.f = f
+  }
+}
+class PCls <T> {
+   public T f
+   public PCls(T f) {
+      this.f = f
+   }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function type, Lambda, Parameterized class, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#47 Unable to assign variable in parameterized class with bounded polymorphism  
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10268">https://issues.apache.org/jira/browse/GROOVY-10268</a>
+<br>
+<b>Date found</b>:
+2021-09-28
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Duplicate
+<br>
+<b>Resolution date</b>:
+2021-09-28
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Cls<T, Z extends T> {
+  public final Z foo
+  public Upbeat(Z foo) {
+    this.foo = foo
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#48 STC reports wrong message when encoutering wildcard types 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10267">https://issues.apache.org/jira/browse/GROOVY-10267</a>
+<br>
+<b>Date found</b>:
+2021-09-27
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {}
+class B {
+  A<? extends Object> test() {
+    return test2();
+  }  A<? extends Object> test2() {
+    return null;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Use-site variance
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#49 STC: cannot return closure from method without casting  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10254">https://issues.apache.org/jira/browse/GROOVY-10254</a>
+<br>
+<b>Date found</b>:
+2021-09-23
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-09-26
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+@groovy.transform.TypeChecked
+public class Main {
+    public static Supplier<Integer> foo() {
+        { -> 10} as Supplier<Integer> // works
+    }
+    public static Supplier<Integer> bar() {
+        { -> 10} //fails
+    }
+    public static void main(String[] args) {
+        Supplier<Integer> v1 = { -> 10} as Supplier<Integer> // works
+        Supplier<Integer> v2 = { -> 10} // works
+        Supplier<Integer> v3 = foo()
+        Supplier<Integer> v4 = bar()
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function type, Lambda
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/1ee6f66a56'>https://github.com/apache/groovy/commit/1ee6f66a56</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#50 Unexpected generics parameter arity mismatch in the "instruction selection" phase  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10230">https://issues.apache.org/jira/browse/GROOVY-10230</a>
+<br>
+<b>Date found</b>:
+2021-09-13
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-11-04
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T1, T2> {}
+class A {
+  <T extends Foo<Number, Number>> T m(T x) {
+    x
+  }
+}
+class B extends A {
+  <T extends Foo<Number, Number>> T m(T x) {
+    T z = null;
+    super.m((true) ? z : z)
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized function, Parameterized class, Parameterized type, Bounded type parameter, Inheritance, Overriding, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#51 STC computes an imprecise LUB when involving two parameterized types implementing the same interface 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10227">https://issues.apache.org/jira/browse/GROOVY-10227</a>
+<br>
+<b>Date found</b>:
+2021-09-13
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A {
+  void foo(I x) {}
+}
+interface I {}
+interface I2 extends I {}
+class B<T> implements I2 {}
+class C<T> implements I {}
+class Main {
+  public static void main(String[] args) {
+    (new A()).foo((true) ? new B<String>() : new C<String>());
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance, Subtyping, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#52 LUB is computed incorrectly when involving bounded type variables  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10226">https://issues.apache.org/jira/browse/GROOVY-10226</a>
+<br>
+<b>Date found</b>:
+2021-09-13
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-14
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T> {}class Main {
+  static final <T extends Foo<String>> T test() {
+    final T x = null;
+    true ? (T) null: x
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized function, Bounded type parameter, Parameterized type, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#53 Unexpected NullPointerException during the "instruction selection" phase  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10225">https://issues.apache.org/jira/browse/GROOVY-10225</a>
+<br>
+<b>Date found</b>:
+2021-09-13
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-09-27
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<Z> {
+  final Z foo(Z x) {
+    null;
+  }
+}
+final class Bar<Y> {  final Foo<Y> bar() {
+    new Foo<>()
+  }
+}
+class Main {
+  static final <F_O extends Number, F_X extends F_O> void test() {
+    final F_X x = (F_X) null
+    (new Bar<F_O>()).bar().foo(((false) ? x : (F_X) null))
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Parameterized function, Bounded type parameter, Subtyping, Conditionals
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/9a642c928f'>https://github.com/apache/groovy/commit/9a642c928f</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#54 Unable to infer the type parameter of a parameterized function  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10222">https://issues.apache.org/jira/browse/GROOVY-10222</a>
+<br>
+<b>Date found</b>:
+2021-09-10
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-12
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A {
+    static <T> T foo() {
+        return null;
+    }
+}
+class Test<T> {
+    void bar() {
+        T x = A.foo();
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized function, Parameterized class
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/4d5c95d3c3'>https://github.com/apache/groovy/commit/4d5c95d3c3</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#55 Unexpected type mismatch when having conflicting type parameter names  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10220">https://issues.apache.org/jira/browse/GROOVY-10220</a>
+<br>
+<b>Date found</b>:
+2021-09-10
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-09-21
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<X, T extends Number> {}
+class B<T> {
+  A<? extends T, Number> x;
+  B(A<? extends T, Number> x) {
+    this.x = x;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Use-site variance, Parameterized type
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/f1c912b53b'>https://github.com/apache/groovy/commit/f1c912b53b</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#56 Unexpected type mismatch when combining conditional and bounded type parameter  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10158">https://issues.apache.org/jira/browse/GROOVY-10158</a>
+<br>
+<b>Date found</b>:
+2021-06-30
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-14
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {}
+class B<T extends A<String>> {
+  T m() {
+    final T x = null;
+    final T y = null;
+    (true) ? y : x
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Bounded type parameter, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#57 STC: cannot combine use-variance with bounded polymorphism 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10153">https://issues.apache.org/jira/browse/GROOVY-10153</a>
+<br>
+<b>Date found</b>:
+2021-06-28
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Test {
+  public void m() {
+    Foo<? super C> x = new Foo<B>();
+  }
+}
+class A {}
+class B extends A {}
+class C extends B {}
+class Foo<T extends A> {
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Use-site variance, Bounded type parameter, Inheritance, Subtyping
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#58 Flow typing does not work when && is combinded with instanceof  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10130">https://issues.apache.org/jira/browse/GROOVY-10130</a>
+<br>
+<b>Date found</b>:
+2021-06-08
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-15
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Test {
+  public void foo(Foo x) {
+    ((true && x instanceof Bar)) ? new Bar[]{x} : null
+  }
+}
+class Foo {}
+class Bar extends Foo {}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Inheritance, Subtyping, Flow typing, Conditionals, Array
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#59 Cannot assign closure with long as return type to java.util.function.Function<X, Number>  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10128">https://issues.apache.org/jira/browse/GROOVY-10128</a>
+<br>
+<b>Date found</b>:
+2021-06-08
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-30
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+@groovy.transform.TypeChecked
+class Main {
+  public static void main(String[] args) {
+      Function<String, Number> x = { y ->
+          final long d = 1;
+          return d;
+      };
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function type, Primitive type, Subtyping, Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#60 FP Cycle detected in type parameter that extends another type parameter  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10125">https://issues.apache.org/jira/browse/GROOVY-10125</a>
+<br>
+<b>Date found</b>:
+2021-06-07
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-06-07
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Test<X, Y extends X> {}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/f48bb0938e'>https://github.com/apache/groovy/commit/f48bb0938e</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#61 STC: error when passing a type parameter in type constructor  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10116">https://issues.apache.org/jira/browse/GROOVY-10116</a>
+<br>
+<b>Date found</b>:
+2021-05-27
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-15
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Test<T> {
+  public void foo() {
+    Foo<T, Long> x = new Foo<T, Long>(new Bar<T, Long>());
+  }
+}
+class Foo<X, T> {
+  public Foo(Bar<X, T> y) {}
+}
+class Bar<X, T> {}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#62 STC: compiler error when using type parameter with extends  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10115">https://issues.apache.org/jira/browse/GROOVY-10115</a>
+<br>
+<b>Date found</b>:
+2021-05-27
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-15
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Bar<L, T extends L> {
+    T x;
+    public Bar(T x) {
+      this.x = x;
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#63 StackOverflowError in STC  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10113">https://issues.apache.org/jira/browse/GROOVY-10113</a>
+<br>
+<b>Date found</b>:
+2021-05-27
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-06-06
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Test<T extends T> {}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/eef2a82ec7'>https://github.com/apache/groovy/commit/eef2a82ec7</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#64 compiler crash during canonicalization  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10111">https://issues.apache.org/jira/browse/GROOVY-10111</a>
+<br>
+<b>Date found</b>:
+2021-05-26
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-26
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<X, Y> {}
+class Bar<X extends Foo<Number, String>> {
+  X[] m() {
+    new X[]{new Foo<Number, String>()}
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Bounded type parameter, Subtyping, Array
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/1265acad6e'>https://github.com/apache/groovy/commit/1265acad6e</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#65 Cannot assign null to a variable with a bounded generic type  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10107">https://issues.apache.org/jira/browse/GROOVY-10107</a>
+<br>
+<b>Date found</b>:
+2021-05-25
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-06-04
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+final class Test<T extends Number> {
+  final void m() {
+    T v = null;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/0bdad7618f'>https://github.com/apache/groovy/commit/0bdad7618f</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#66 groovyc infers the wrong type when using a method reference of a function with varargs  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10100">https://issues.apache.org/jira/browse/GROOVY-10100</a>
+<br>
+<b>Date found</b>:
+2021-05-20
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-03-14
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+class Foo<T> {
+    public T method(Object... args) {
+      return null;
+    }
+}
+class Bar {
+    public static <T extends Number> void test(T a) {
+        Foo<T> x = new Foo<>();
+        Function<String[], T> b = x::method;
+        T y = b.apply(new String[] {"str"});
+    }
+}
+public class Main {
+  public static void main(String[] args) {
+    Bar.test(1);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Variable arguments, Parameterized function, Bounded type parameter, Function reference, Function type, Array
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#67 Unexpected behaviour when the return type of a closure is a type parameter  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10098">https://issues.apache.org/jira/browse/GROOVY-10098</a>
+<br>
+<b>Date found</b>:
+2021-05-19
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-20
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T extends Number> {
+  T f  Foo(T f) {
+    this.f = f
+  }
+  T foo() {
+    Closure<T> clos = { -> f}
+    clos()
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Function type, Lambda
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/7855eb2d4e'>https://github.com/apache/groovy/commit/7855eb2d4e</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#68 Incompatible generic argument types on closure's return type  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10091">https://issues.apache.org/jira/browse/GROOVY-10091</a>
+<br>
+<b>Date found</b>:
+2021-05-17
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-18
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T> {}
+class Bar<T> extends Foo<Integer> {}
+class Baz extends Foo<Integer> {}
+public class Main {
+  public static void main(String[] args) {
+    Closure<Foo<Integer>> z = { -> new Baz()} // this works
+    Closure<Foo<Integer>> f = { -> new Bar<String>()} // this doesn't work
+  } 
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance, Subtyping, Lambda, Function type
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/f3d030afaa'>https://github.com/apache/groovy/commit/f3d030afaa</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#69 STC does not perform boxing on chars when encountering assignment and function call  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10087">https://issues.apache.org/jira/browse/GROOVY-10087</a>
+<br>
+<b>Date found</b>:
+2021-05-13
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-16
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+public class Main {
+    public static void main(String[] args) {
+      Character c = foo();
+    }
+    public static char foo() {
+      'd' as char
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Primitive type
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/0cb74ad876'>https://github.com/apache/groovy/commit/0cb74ad876</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#70 Incompatible generic argument types when combining subtyping and closures  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10082">https://issues.apache.org/jira/browse/GROOVY-10082</a>
+<br>
+<b>Date found</b>:
+2021-05-12
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-15
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A {}
+class B extends A {}
+class Main {
+  public static void main(String[] args) {
+    Closure<A> cls = { -> {
+      final A x = new B()
+      x
+    }}
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Inheritance, Subtyping, Lambda, Function type
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/0484437c0c'>https://github.com/apache/groovy/commit/0484437c0c</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#71 Conversion from int to byte does not work in case of ternary operator 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10081">https://issues.apache.org/jira/browse/GROOVY-10081</a>
+<br>
+<b>Date found</b>:
+2021-05-11
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.CompileStatic
+public class Main {
+  static byte x = 1;
+  public static byte foo() {
+    1
+  }
+  public static void main(String[] args) {
+    x = (true) ? 0 : foo() // this does not work
+    // the following works
+    if (true) {
+      x = 0
+    } else {
+      x = foo()
+    }
+    byte y = (true) ? 0 : foo() // this doesn't work as well
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Primitive type, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#72 groovyc does not perform unboxing on Character type  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10079">https://issues.apache.org/jira/browse/GROOVY-10079</a>
+<br>
+<b>Date found</b>:
+2021-05-10
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-11
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+public class Main {
+  public static char foo() {
+    return (Character) 'd';
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Primitive type
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/01d70022ff'>https://github.com/apache/groovy/commit/01d70022ff</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#73 Compiler crash when encountering function reference on nested class  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10033">https://issues.apache.org/jira/browse/GROOVY-10033</a>
+<br>
+<b>Date found</b>:
+2021-04-12
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-04-26
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo {
+  protected Foo(Closure<Foo, Bar> x) {}
+}
+class Bar {
+    Bar(Foo x) {}
+}
+public class X extends Foo {
+    public X() {
+        super(Y::new);
+    }
+    private class Y extends Bar {
+        Y(Foo x) {
+            super(x);
+        }
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Inheritance, Function reference, Function type
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/975ac87108'>https://github.com/apache/groovy/commit/975ac87108</a>
+</li>
+<li>
+<a href='https://github.com/apache/groovy/commit/090f3b69d4'>https://github.com/apache/groovy/commit/090f3b69d4</a>
+</li>
+<li>
+<a href='https://github.com/apache/groovy/commit/011ad03895'>https://github.com/apache/groovy/commit/011ad03895</a>
+</li>
+<li>
+<a href='https://github.com/apache/groovy/commit/09b38330f0'>https://github.com/apache/groovy/commit/09b38330f0</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#74 Inconsistency in handling of numeric types 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9979">https://issues.apache.org/jira/browse/GROOVY-9979</a>
+<br>
+<b>Date found</b>:
+2021-03-11
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+public class Main {
+  public static void foo() {
+    final Byte f = (Float) 32.3 // possible loss of precision
+    baz((Float) 13.3) // cannot find matching method
+  }
+  public static Byte bar() {
+    return (Float) 4324141.4 // does not report error.
+  }
+  public static void baz(Byte x) {}
+}
+</xmp>
+</pre>
+
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#75 STC: Access to field/property is forbidden after instanceof.  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9967">https://issues.apache.org/jira/browse/GROOVY-9967</a>
+<br>
+<b>Date found</b>:
+2021-03-05
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-03-07
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test {
+  static void main(String[] args) {
+    println(C.func4(new B()))
+  }
+}
+class A {}
+class B extends A {
+  // It has the same behavior if f is a field instead of a property.
+  String f = "foo"
+}
+@groovy.transform.CompileStatic
+class C {
+  static String func1(Object x) {
+    (x instanceof String) ? x : "foo" // Compiles
+  }
+  static String func2(B x) {
+    x.f // Compiles
+  }
+  static String func3(B x) {
+    (x instanceof B) ? x.f : "foo" // Compiles
+  }
+  static String func4(A x) {
+    (x instanceof B) ? x.f : "foo" // Does not compile
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Inheritance, Subtyping, Flow typing
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/56ca15ee7d'>https://github.com/apache/groovy/commit/56ca15ee7d</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#76 Cannot pass numeric constant to a method with a generic type 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9947">https://issues.apache.org/jira/browse/GROOVY-9947</a>
+<br>
+<b>Date found</b>:
+2021-02-16
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.TypeChecked
+class Main {
+  public static final void main(String[] args) {
+    final A<Float> a = new A<Float>()
+    a.foo(10)
+    a.bar(10) // Fails here
+  }
+}
+final class A<T> {
+  final void foo(Float x) {}
+  final void bar(T x) {}
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#77 STC: Cannot find matching method when using Generics  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9945">https://issues.apache.org/jira/browse/GROOVY-9945</a>
+<br>
+<b>Date found</b>:
+2021-02-16
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-03-02
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+interface I1<X, Y> {}
+interface I2 extends I1<Character, Character> {}
+class Foo<X, Y> implements I2 {
+  public void foo(X x, Y y) {}
+}
+class Bar<X, Y> extends Foo<X, Y> {}
+@groovy.transform.TypeChecked
+class Main {
+  public static void foo() {
+    new Bar<Float, Integer>().foo((Float) 1.4, -1)
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/apache/groovy/commit/8b87f7c65a'>https://github.com/apache/groovy/commit/8b87f7c65a</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#78 !instanceof inference does not work 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-9931">https://issues.apache.org/jira/browse/GROOVY-9931</a>
+<br>
+<b>Date found</b>:
+2021-02-08
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@groovy.transform.CompileStatic
+class Main {
+    static Integer bar(Object o) {
+        if (o !instanceof Integer) {
+            return 0
+        } else {
+            return o
+        }
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Flow typing
+
 <br>
 <br>
 </details>

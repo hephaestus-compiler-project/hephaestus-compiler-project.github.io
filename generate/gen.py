@@ -55,6 +55,13 @@ details_test = """<br>
 </xmp>
 </pre>"""
 
+details_fix = """<br>
+<b>Fix Commit(s)</b>:
+<ul>
+{}
+</ul>
+"""
+
 details = """
 <details>
 <br>
@@ -73,6 +80,7 @@ details = """
 {symptom}
 {test}
 {characteristics}
+{fix}
 <br>
 <br>
 </details>
@@ -116,6 +124,7 @@ lang_lookup = {
     'total': 'Total'
 }
 
+
 rows_lookup = {
     'generator': 'Generator',
     'inference': 'TEM',
@@ -125,6 +134,14 @@ rows_lookup = {
     'Unexpected Runtime Behavior': 'URB',
     'crash': 'Crash'
 }
+
+
+urls = {
+    'Groovy': 'https://github.com/apache/groovy/commit/',
+    'Kotlin': 'https://github.com/JetBrains/kotlin/commit/',
+    'Java': 'https://github.com/openjdk/jdk/commit/'
+}
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -284,7 +301,13 @@ def create_bug_reports(component, bugs, output, filename):
                                     ", ".join(bug['chars']['characteristics'])
                                 ),
                 test='' if len(bug['test']) == 0 else
-                     details_test.format("\n".join(bug['test']))
+                     details_test.format("\n".join(bug['test'])),
+                fix='' if not bug.get('fix', False) else
+                    details_fix.format("".join(
+                        ["<li>\n<a href='{url}'>{url}</a>\n</li>\n".format(
+                            url = urls[lang] + i) 
+                         for i in bug['fix']['commits']]
+                    ))
             )
             contents.append("<li>\n<b>\n#{} {} {}\n</b>\n{}</li>\n".format(
                counter, bug['title'], 
