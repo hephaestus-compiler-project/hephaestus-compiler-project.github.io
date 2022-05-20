@@ -209,6 +209,8 @@ def process(bug, res, bugs_by_mutator, chars, combinations, categories):
     if status is None:
         status = d['resolution'][lang].get(bresolution, None)
     symptom = d['symptom'].get(bsymptom, None)
+    if status is None:
+        import pdb; pdb.set_trace()
     res[lang]['status'][status] += 1
     res[lang]['symptom'][symptom] += 1
     res[lang]['mutator'][bmutator] += 1
@@ -254,7 +256,7 @@ def create_index(templates, output, res):
         to_replace[keyword + '_BUGS'] = res['total']['symptom'][symptom]
 
     components = [('generator', 'HEPHAESTUS'),
-                  ('inference', 'TEM'), 
+                  ('inference', 'TEM'),
                   ('soundness', 'TOM'),
                   ('inference/soundness', 'COMB')]
     for component, keyword in components:
@@ -289,14 +291,14 @@ def create_bug_reports(component, bugs, output, filename):
                 link=bug['links']['issuetracker'],
                 date=bug['date'].split(' ')[0],
                 status=bug['status'],
-                resolution='' if not bug['resolution'] else 
+                resolution='' if not bug['resolution'] else
                            details_resolution.format(bug['resolution']),
                 resolution_date='' if bug['resolutiondate'] == 'None' else
                                 details_resolution_date.format(
                                     bug['resolutiondate'].split(' ')[0]
                                 ),
                 symptom=bug['symptom'].capitalize(),
-                characteristics='' if len(bug['chars']['characteristics']) == 0 
+                characteristics='' if len(bug['chars']['characteristics']) == 0
                                 else details_characteristics.format(
                                     ", ".join(bug['chars']['characteristics'])
                                 ),
@@ -305,12 +307,12 @@ def create_bug_reports(component, bugs, output, filename):
                 fix='' if not bug.get('fix', False) else
                     details_fix.format("".join(
                         ["<li>\n<a href='{url}'>{url}</a>\n</li>\n".format(
-                            url = urls[lang] + i) 
+                            url = urls[lang] + i)
                          for i in bug['fix']['commits']]
                     ))
             )
             contents.append("<li>\n<b>\n#{} {} {}\n</b>\n{}</li>\n".format(
-               counter, bug['title'], 
+               counter, bug['title'],
                '' if bug['resolution'] != 'Fixed' else ' -- Fixed',
                bug_details
             ))
@@ -361,14 +363,14 @@ def main():
     langs = ['Groovy', 'Kotlin', 'Java', 'total']
 
     create_index(args.templates, args.output, res)
-    create_bug_reports('Program Generator', bugs_by_mutator['generator'], 
+    create_bug_reports('Program Generator', bugs_by_mutator['generator'],
                        args.output, 'hephaestus_bugs.html')
-    create_bug_reports('Type Erasure Mutation', bugs_by_mutator['inference'], 
+    create_bug_reports('Type Erasure Mutation', bugs_by_mutator['inference'],
                        args.output, 'tem_bugs.html')
-    create_bug_reports('Type Overwriting Mutation', bugs_by_mutator['soundness'], 
+    create_bug_reports('Type Overwriting Mutation', bugs_by_mutator['soundness'],
                        args.output, 'tom_bugs.html')
-    create_bug_reports('Type Erasure and Type Overwriting Mutation', 
-                       bugs_by_mutator['inference/soundness'], 
+    create_bug_reports('Type Erasure and Type Overwriting Mutation',
+                       bugs_by_mutator['inference/soundness'],
                        args.output, 'tem_tom_bugs.html')
 
 

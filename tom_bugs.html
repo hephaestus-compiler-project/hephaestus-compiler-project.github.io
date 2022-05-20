@@ -39,8 +39,34 @@ Open
 <br>
 <b>Symptom</b>:
 Unexpected runtime behavior
-
-
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {
+  T x;
+  A(T x) {this.x = x;}
+  A() {}
+}
+class B<T extends Object> extends A<T> {
+  B(T x) {
+    super(x);
+  }
+  B() {}
+  T m() {
+    A<T> x = new B<Object>("fd"); // Misses type error: B<Object> is not a subtype of A<T>
+    return x.x;
+  }
+}
+class Test {
+  public static void main(String[] args) {
+    Integer x = new B<Integer>().m();
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Inheritance, Subtyping
 
 <br>
 <br>
@@ -968,45 +994,38 @@ class Foo {
 <ul>
 <li>
 <b>
-#22 IllegalArgumentException: ClassicTypeSystemContext couldn't handle: Captured(out Number)  -- Fixed
+#22 Superfluous TYPE_MISMATCH when instantiating type constructor with bounded type parameters 
 </b>
 
 <details>
 <br>
 <b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-49101">https://youtrack.jetbrains.com/issue/KT-49101</a>
+<a href="https://youtrack.jetbrains.com/issue/KT-47458">https://youtrack.jetbrains.com/issue/KT-47458</a>
 <br>
 <b>Date found</b>:
-2021-10-06
+2021-06-25
 <br>
 <b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-10-20
+Open
+
+
 <br>
 <b>Symptom</b>:
-Crash
+Unexpected runtime behavior
 <br>
 <b>Test case</b>:
 <pre>
 <xmp>
-class A<T: B<out Number>>(val x: T) {
-    fun test() {
-      val y: Int = x.m<C<out Number>>()
-    }
+class Foo<out Y, Z: Y>
+open class A
+class B : A()
+fun main() {
+    val x: Foo<A, in A> = Foo<B, B>()
 }
-class B<T1> {
-    fun <X1: C<T1>> m(): Int = 1
-}
-class C<T>
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter, Use-site variance, Parameterized type, Parameterized function, Type argument inference
+Parameterized class, Declaration-site variance, Bounded type parameter, Use-site variance, Parameterized type, Inheritance
 
 <br>
 <br>
@@ -1053,38 +1072,45 @@ Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#24 Superfluous TYPE_MISMATCH when instantiating type constructor with bounded type parameters 
+#24 IllegalArgumentException: ClassicTypeSystemContext couldn't handle: Captured(out Number)  -- Fixed
 </b>
 
 <details>
 <br>
 <b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-47458">https://youtrack.jetbrains.com/issue/KT-47458</a>
+<a href="https://youtrack.jetbrains.com/issue/KT-49101">https://youtrack.jetbrains.com/issue/KT-49101</a>
 <br>
 <b>Date found</b>:
-2021-06-25
+2021-10-06
 <br>
 <b>Status</b>:
-Open
-
-
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-10-20
 <br>
 <b>Symptom</b>:
-Unexpected runtime behavior
+Crash
 <br>
 <b>Test case</b>:
 <pre>
 <xmp>
-class Foo<out Y, Z: Y>
-open class A
-class B : A()
-fun main() {
-    val x: Foo<A, in A> = Foo<B, B>()
+class A<T: B<out Number>>(val x: T) {
+    fun test() {
+      val y: Int = x.m<C<out Number>>()
+    }
 }
+class B<T1> {
+    fun <X1: C<T1>> m(): Int = 1
+}
+class C<T>
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Declaration-site variance, Bounded type parameter, Use-site variance, Parameterized type, Inheritance
+Parameterized class, Bounded type parameter, Use-site variance, Parameterized type, Parameterized function, Type argument inference
 
 <br>
 <br>
