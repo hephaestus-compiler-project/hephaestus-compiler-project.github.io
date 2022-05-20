@@ -209,8 +209,6 @@ def process(bug, res, bugs_by_mutator, chars, combinations, categories):
     if status is None:
         status = d['resolution'][lang].get(bresolution, None)
     symptom = d['symptom'].get(bsymptom, None)
-    if status is None:
-        import pdb; pdb.set_trace()
     res[lang]['status'][status] += 1
     res[lang]['symptom'][symptom] += 1
     res[lang]['mutator'][bmutator] += 1
