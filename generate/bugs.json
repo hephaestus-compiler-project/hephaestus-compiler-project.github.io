@@ -1,17 +1,74 @@
 [
     {
-        "date": "2022-05-06 13:32:03.068000",
+        "date": "2021-09-15 07:55:39.756000",
         "language": "Kotlin",
         "compiler": "kotlinc",
         "version": "",
-        "bugid": "KT-52307",
-        "title": "TYPE_MISMATCH when using a SAM type with star projection",
+        "bugid": "KT-48765",
+        "title": "NI: Inferred type does not respect the bound of type variable",
         "links": {
-            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-52307",
+            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-48765",
             "fix": ""
         },
-        "oracle": "",
-        "mutator": "generator",
+        "oracle": "compiled",
+        "mutator": "inference/soundness",
+        "severity": "",
+        "reporter": "theosotr",
+        "status": "Open",
+        "resolution": "",
+        "resolutiondate": "2022-04-28 07:02:14.921000",
+        "symptom": "Unexpected Runtime Behavior",
+        "bugtype": "",
+        "resolvedin": "224 days, 23:06:35.165000",
+        "test": [
+            "open class A<T1, T2> {}",
+            "class B {",
+            "    fun <T1: Number, T2: A<Float, T1>> foo(x1: T2, x2: T1) {}",
+            "}",
+            "class C<T: D, T2>(val x: T, val y: T2) {",
+            "    fun test() {",
+            "        B().foo(x, foo())",
+            "    }",
+            "}",
+            "open class D: A<Float, Number>()",
+            "fun <T: String> foo(): T  {",
+            "    return \"\" as T // this cast is safe because String is final.",
+            "}",
+            "fun main() {",
+            "    C(D(), 10.5).test()",
+            "}"
+        ],
+        "errormsg": [
+            "Exception in thread \"main\" java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')",
+            "        at C.test(kotlin6.kt:9)",
+            "        at Kotlin6Kt.main(kotlin6.kt:21)",
+            "        at Kotlin6Kt.main(kotlin6.kt)"
+        ],
+        "comment": "",
+        "chars": {
+            "characteristics": [
+                "Parameterized class",
+                "Parameterized type",
+                "Parameterized function",
+                "Bounded type parameter",
+                "Type argument inference",
+                "Subtyping"
+            ]
+        }
+    },
+    {
+        "date": "2020-12-09 12:25:55.486000",
+        "language": "Kotlin",
+        "compiler": "kotlinc",
+        "version": "",
+        "bugid": "KT-43846",
+        "title": "No smart cast when returning function closures with captured smart-cast variable",
+        "links": {
+            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-43846",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "inference",
         "severity": "",
         "reporter": "theosotr",
         "status": "Submitted",
@@ -21,28 +78,26 @@
         "bugtype": "",
         "resolvedin": "None",
         "test": [
-            "import java.util.function.Function;",
-            "class A(val x: Function<*, String>)",
-            "fun main() {",
-            "    A({ x: String -> x })",
+            "fun foo(x: Any): String {",
+            "    if (x is String) {",
+            "        val thunk = {x}",
+            "        return thunk()",
+            "    }",
+            "    return \"str\"",
             "}"
         ],
+        "errormsg": [
+            "program.kt:4:16: error: type mismatch: inferred type is Any but String was expected",
+            "        return thunk()"
+        ],
+        "comment": "could be inference (smart cast)",
         "chars": {
             "characteristics": [
-                "Lambda",
-                "SAM type",
-                "Subtyping"
+                "Flow typing",
+                "Variable type inference",
+                "Lambda"
             ]
-        },
-        "errormsg": [
-            "test.kt:6:7: error: type mismatch: inferred type is (String) -> String but (Any!) -> String was expected",
-            "    A({ x: String -> x })",
-            "      ^",
-            "test.kt:6:9: error: expected parameter of type Any!",
-            "    A({ x: String -> x })",
-            "        ^"
-        ],
-        "comment": ""
+        }
     },
     {
         "date": "2021-09-30 14:09:56.538000",
@@ -331,6 +386,108 @@
         }
     },
     {
+        "date": "2021-09-15 07:41:22.621000",
+        "language": "Kotlin",
+        "compiler": "kotlinc",
+        "version": "",
+        "bugid": "KT-48764",
+        "title": "NI: Compile-time error when combining anonymous function and lambda in a conditional",
+        "links": {
+            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-48764",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "inference",
+        "severity": "",
+        "reporter": "theosotr",
+        "status": "Open",
+        "resolution": "",
+        "resolutiondate": "None",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "None",
+        "test": [
+            "fun test(x: Function<Any>): Unit {}",
+            "fun main() {",
+            "    val x: Function<Any> = (",
+            "        if (true) {x: String, y: String -> x + y}",
+            "        else fun(x: String) = x",
+            "    ) // this works",
+            "    test(",
+            "        if (true) { x: String, y: String -> x + y}",
+            "        else fun(x: String) = x",
+            "    ) // this does not work",
+            "}"
+        ],
+        "errormsg": [
+            "kotlin7.kt:11:14: error: type mismatch: inferred type is (String) -> String but (String, String) -> String was expected",
+            "        else fun(x: String) = x",
+            "             ^",
+            "kotlin7.kt:11:14: error: type mismatch: inferred type is (String) -> String but (String, String) -> TypeVariable(_R) was expected",
+            "        else fun(x: String) = x",
+            "             ^",
+            "kotlin7.kt:11:17: error: expected 2 parameters of types String, String",
+            "        else fun(x: String) = x",
+            "                ^"
+        ],
+        "comment": "",
+        "chars": {
+            "characteristics": [
+                "Function type",
+                "Lambda",
+                "Return type inference",
+                "Subtyping"
+            ]
+        }
+    },
+    {
+        "date": "2021-06-30 08:07:41.415000",
+        "language": "Kotlin",
+        "compiler": "kotlinc",
+        "version": "",
+        "bugid": "KT-47530",
+        "title": "NI: Unexpected TYPE_MISMATCH when combining nested conditional and contravariant type argument",
+        "links": {
+            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-47530",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "generator",
+        "severity": "",
+        "reporter": "theosotr",
+        "status": "Open",
+        "resolution": "",
+        "resolutiondate": "2022-07-28 09:41:41.160000",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "393 days, 1:33:59.745000",
+        "test": [
+            "class Foo<T>",
+            "fun main() {",
+            "    val x: Foo<in Long> =",
+            "      if (true) Foo<Long>()",
+            "      else",
+            "        if (true) Foo<Long>()",
+            "        else Foo<Number>()",
+            "}"
+        ],
+        "errormsg": [
+            "test.kt:7:9: error: type mismatch: inferred type is Foo<out Number> but Foo<in Long> was expected",
+            "        if (true) Foo<Long>()",
+            "        ^"
+        ],
+        "comment": "",
+        "chars": {
+            "characteristics": [
+                "Parameterized class",
+                "Parameterized type",
+                "Use-site variance",
+                "Conditionals",
+                "Subtyping"
+            ]
+        }
+    },
+    {
         "date": "2021-11-06 09:21:17.625000",
         "language": "Kotlin",
         "compiler": "kotlinc",
@@ -347,10 +504,10 @@
         "reporter": "theosotr",
         "status": "Open",
         "resolution": "",
-        "resolutiondate": "None",
+        "resolutiondate": "2022-07-28 09:34:08.275000",
         "symptom": "crash",
         "bugtype": "",
-        "resolvedin": "None",
+        "resolvedin": "264 days, 0:12:50.650000",
         "test": [
             "class Foo(var pickaxe: Function0<Function1<Char, Any>>)",
             "interface I {",
@@ -469,61 +626,162 @@
         "comment": ""
     },
     {
-        "date": "2021-09-15 07:55:39.756000",
+        "date": "2020-12-07 16:01:57.207000",
         "language": "Kotlin",
         "compiler": "kotlinc",
         "version": "",
-        "bugid": "KT-48765",
-        "title": "NI: Inferred type does not respect the bound of type variable",
+        "bugid": "KT-43806",
+        "title": "\"Unexpected tokens\" when `if` statement contains double parenthesis in variable assignment",
         "links": {
-            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-48765",
+            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-43806",
             "fix": ""
         },
-        "oracle": "compiled",
-        "mutator": "inference/soundness",
+        "oracle": "error",
+        "mutator": "generator",
         "severity": "",
         "reporter": "theosotr",
-        "status": "Open",
+        "status": "Submitted",
         "resolution": "",
-        "resolutiondate": "2022-04-28 07:02:14.921000",
-        "symptom": "Unexpected Runtime Behavior",
+        "resolutiondate": "2022-06-08 12:41:05.660000",
+        "symptom": "Unexpected Compile-Time Error",
         "bugtype": "",
-        "resolvedin": "224 days, 23:06:35.165000",
+        "resolvedin": "547 days, 20:39:08.453000",
         "test": [
-            "open class A<T1, T2> {}",
-            "class B {",
-            "    fun <T1: Number, T2: A<Float, T1>> foo(x1: T2, x2: T1) {}",
-            "}",
-            "class C<T: D, T2>(val x: T, val y: T2) {",
-            "    fun test() {",
-            "        B().foo(x, foo())",
-            "    }",
-            "}",
-            "open class D: A<Float, Number>()",
-            "fun <T: String> foo(): T  {",
-            "    return \"\" as T // this cast is safe because String is final.",
-            "}",
-            "fun main() {",
-            "    C(D(), 10.5).test()",
-            "}"
+            " val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)"
         ],
         "errormsg": [
-            "Exception in thread \"main\" java.lang.ClassCastException: class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')",
-            "        at C.test(kotlin6.kt:9)",
-            "        at Kotlin6Kt.main(kotlin6.kt:21)",
-            "        at Kotlin6Kt.main(kotlin6.kt)"
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "              ^",
+            "program.kt:1:17: error: expecting comma or ')'",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                ^",
+            "program.kt:1:18: error: expecting ')'",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                 ^",
+            "program.kt:1:19: error: expecting '->' to specify return type of a function type",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                  ^",
+            "program.kt:1:20: error: type expected",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                   ^",
+            "program.kt:1:21: error: expecting comma or ')'",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                    ^",
+            "program.kt:1:21: error: expecting ')'",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                    ^",
+            "program.kt:1:24: error: expecting '->' to specify return type of a function type",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                       ^",
+            "program.kt:1:26: error: type expected",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                         ^",
+            "program.kt:1:28: error: property getter or setter expected",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
+            "                           ^",
+            "program.kt:1:9: error: expression '98' of type 'Int' cannot be invoked as a function. The function 'invoke()' is not found",
+            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)"
         ],
         "comment": "",
         "chars": {
             "characteristics": [
-                "Parameterized class",
-                "Parameterized type",
-                "Parameterized function",
-                "Bounded type parameter",
-                "Type argument inference",
-                "Subtyping"
+                "Conditionals"
             ]
         }
+    },
+    {
+        "date": "2021-09-21 05:42:14.025000",
+        "language": "Kotlin",
+        "compiler": "kotlinc",
+        "version": "",
+        "bugid": "KT-48838",
+        "title": "Support SAM conversions on value parameters inferred into Kotlin functional interface",
+        "links": {
+            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-48838",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "generator",
+        "severity": "",
+        "reporter": "stefanoshaliassos",
+        "status": "Open",
+        "resolution": "",
+        "resolutiondate": "None",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "None",
+        "test": [
+            "fun interface FI {",
+            "    fun foo(i: Int): Int",
+            "}",
+            "fun test1(x: FI) {}",
+            "fun <T> test2(x: T) {}",
+            "fun main() {",
+            "    test1({x: Int -> x})",
+            "    test2<FI>({x: Int -> x}) // error [TYPE_MISMATCH] Type mismatch.",
+            "}"
+        ],
+        "errormsg": [
+            "program.kt:11:15: error: type mismatch: inferred type is (Int) -> Int but FI was expected",
+            "    test2<FI>({x: Int -> x})",
+            "              ^",
+            "program.kt:11:26: error: type mismatch: inferred type is (Int) -> Int but FI was expected",
+            "    test2<FI>({x: Int -> x})",
+            "                         ^"
+        ],
+        "comment": "",
+        "chars": {
+            "characteristics": [
+                "SAM type",
+                "Parameterized function",
+                "Lambda"
+            ]
+        }
+    },
+    {
+        "date": "2022-05-06 13:32:03.068000",
+        "language": "Kotlin",
+        "compiler": "kotlinc",
+        "version": "",
+        "bugid": "KT-52307",
+        "title": "TYPE_MISMATCH when using a SAM type with star projection",
+        "links": {
+            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-52307",
+            "fix": ""
+        },
+        "oracle": "",
+        "mutator": "generator",
+        "severity": "",
+        "reporter": "theosotr",
+        "status": "Submitted",
+        "resolution": "",
+        "resolutiondate": "None",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "None",
+        "test": [
+            "import java.util.function.Function;",
+            "class A(val x: Function<*, String>)",
+            "fun main() {",
+            "    A({ x: String -> x })",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Lambda",
+                "SAM type",
+                "Subtyping"
+            ]
+        },
+        "errormsg": [
+            "test.kt:6:7: error: type mismatch: inferred type is (String) -> String but (Any!) -> String was expected",
+            "    A({ x: String -> x })",
+            "      ^",
+            "test.kt:6:9: error: expected parameter of type Any!",
+            "    A({ x: String -> x })",
+            "        ^"
+        ],
+        "comment": ""
     },
     {
         "date": "2021-09-28 09:22:25.441000",
@@ -575,108 +833,6 @@
             "characteristics": [
                 "Parameterized function",
                 "Function type"
-            ]
-        }
-    },
-    {
-        "date": "2021-09-15 07:41:22.621000",
-        "language": "Kotlin",
-        "compiler": "kotlinc",
-        "version": "",
-        "bugid": "KT-48764",
-        "title": "NI: Compile-time error when combining anonymous function and lambda in a conditional",
-        "links": {
-            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-48764",
-            "fix": ""
-        },
-        "oracle": "error",
-        "mutator": "inference",
-        "severity": "",
-        "reporter": "theosotr",
-        "status": "Open",
-        "resolution": "",
-        "resolutiondate": "None",
-        "symptom": "Unexpected Compile-Time Error",
-        "bugtype": "",
-        "resolvedin": "None",
-        "test": [
-            "fun test(x: Function<Any>): Unit {}",
-            "fun main() {",
-            "    val x: Function<Any> = (",
-            "        if (true) {x: String, y: String -> x + y}",
-            "        else fun(x: String) = x",
-            "    ) // this works",
-            "    test(",
-            "        if (true) { x: String, y: String -> x + y}",
-            "        else fun(x: String) = x",
-            "    ) // this does not work",
-            "}"
-        ],
-        "errormsg": [
-            "kotlin7.kt:11:14: error: type mismatch: inferred type is (String) -> String but (String, String) -> String was expected",
-            "        else fun(x: String) = x",
-            "             ^",
-            "kotlin7.kt:11:14: error: type mismatch: inferred type is (String) -> String but (String, String) -> TypeVariable(_R) was expected",
-            "        else fun(x: String) = x",
-            "             ^",
-            "kotlin7.kt:11:17: error: expected 2 parameters of types String, String",
-            "        else fun(x: String) = x",
-            "                ^"
-        ],
-        "comment": "",
-        "chars": {
-            "characteristics": [
-                "Function type",
-                "Lambda",
-                "Return type inference",
-                "Subtyping"
-            ]
-        }
-    },
-    {
-        "date": "2021-06-30 08:07:41.415000",
-        "language": "Kotlin",
-        "compiler": "kotlinc",
-        "version": "",
-        "bugid": "KT-47530",
-        "title": "NI: Unexpected TYPE_MISMATCH when combining nested conditional and contravariant type argument",
-        "links": {
-            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-47530",
-            "fix": ""
-        },
-        "oracle": "error",
-        "mutator": "generator",
-        "severity": "",
-        "reporter": "theosotr",
-        "status": "Open",
-        "resolution": "",
-        "resolutiondate": "None",
-        "symptom": "Unexpected Compile-Time Error",
-        "bugtype": "",
-        "resolvedin": "None",
-        "test": [
-            "class Foo<T>",
-            "fun main() {",
-            "    val x: Foo<in Long> =",
-            "      if (true) Foo<Long>()",
-            "      else",
-            "        if (true) Foo<Long>()",
-            "        else Foo<Number>()",
-            "}"
-        ],
-        "errormsg": [
-            "test.kt:7:9: error: type mismatch: inferred type is Foo<out Number> but Foo<in Long> was expected",
-            "        if (true) Foo<Long>()",
-            "        ^"
-        ],
-        "comment": "",
-        "chars": {
-            "characteristics": [
-                "Parameterized class",
-                "Parameterized type",
-                "Use-site variance",
-                "Conditionals",
-                "Subtyping"
             ]
         }
     },
@@ -1158,55 +1314,6 @@
                 "compiler/backend/src/org/jetbrains/kotlin/codegen/optimization/boxing/StackPeepholeOptimizationsTransformer.kt"
             ],
             "lines": 15
-        }
-    },
-    {
-        "date": "2021-09-21 05:42:14.025000",
-        "language": "Kotlin",
-        "compiler": "kotlinc",
-        "version": "",
-        "bugid": "KT-48838",
-        "title": "Support SAM conversions on value parameters inferred into Kotlin functional interface",
-        "links": {
-            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-48838",
-            "fix": ""
-        },
-        "oracle": "error",
-        "mutator": "generator",
-        "severity": "",
-        "reporter": "stefanoshaliassos",
-        "status": "Open",
-        "resolution": "",
-        "resolutiondate": "None",
-        "symptom": "Unexpected Compile-Time Error",
-        "bugtype": "",
-        "resolvedin": "None",
-        "test": [
-            "fun interface FI {",
-            "    fun foo(i: Int): Int",
-            "}",
-            "fun test1(x: FI) {}",
-            "fun <T> test2(x: T) {}",
-            "fun main() {",
-            "    test1({x: Int -> x})",
-            "    test2<FI>({x: Int -> x}) // error [TYPE_MISMATCH] Type mismatch.",
-            "}"
-        ],
-        "errormsg": [
-            "program.kt:11:15: error: type mismatch: inferred type is (Int) -> Int but FI was expected",
-            "    test2<FI>({x: Int -> x})",
-            "              ^",
-            "program.kt:11:26: error: type mismatch: inferred type is (Int) -> Int but FI was expected",
-            "    test2<FI>({x: Int -> x})",
-            "                         ^"
-        ],
-        "comment": "",
-        "chars": {
-            "characteristics": [
-                "SAM type",
-                "Parameterized function",
-                "Lambda"
-            ]
         }
     },
     {
@@ -2321,49 +2428,6 @@
         }
     },
     {
-        "date": "2020-12-09 12:25:55.486000",
-        "language": "Kotlin",
-        "compiler": "kotlinc",
-        "version": "",
-        "bugid": "KT-43846",
-        "title": "No smart cast when returning function closures with captured smart-cast variable",
-        "links": {
-            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-43846",
-            "fix": ""
-        },
-        "oracle": "error",
-        "mutator": "inference",
-        "severity": "",
-        "reporter": "theosotr",
-        "status": "Submitted",
-        "resolution": "",
-        "resolutiondate": "None",
-        "symptom": "Unexpected Compile-Time Error",
-        "bugtype": "",
-        "resolvedin": "None",
-        "test": [
-            "fun foo(x: Any): String {",
-            "    if (x is String) {",
-            "        val thunk = {x}",
-            "        return thunk()",
-            "    }",
-            "    return \"str\"",
-            "}"
-        ],
-        "errormsg": [
-            "program.kt:4:16: error: type mismatch: inferred type is Any but String was expected",
-            "        return thunk()"
-        ],
-        "comment": "could be inference (smart cast)",
-        "chars": {
-            "characteristics": [
-                "Flow typing",
-                "Variable type inference",
-                "Lambda"
-            ]
-        }
-    },
-    {
         "date": "2021-01-28 14:10:00.384000",
         "language": "Kotlin",
         "compiler": "kotlinc",
@@ -2459,70 +2523,6 @@
                 "Conditionals",
                 "Type argument inference",
                 "Variable type inference"
-            ]
-        }
-    },
-    {
-        "date": "2020-12-07 16:01:57.207000",
-        "language": "Kotlin",
-        "compiler": "kotlinc",
-        "version": "",
-        "bugid": "KT-43806",
-        "title": "\"Unexpected tokens\" when `if` statement contains double parenthesis in variable assignment",
-        "links": {
-            "issuetracker": "https://youtrack.jetbrains.com/issue/KT-43806",
-            "fix": ""
-        },
-        "oracle": "error",
-        "mutator": "generator",
-        "severity": "",
-        "reporter": "theosotr",
-        "status": "Submitted",
-        "resolution": "",
-        "resolutiondate": "None",
-        "symptom": "Unexpected Compile-Time Error",
-        "bugtype": "",
-        "resolvedin": "None",
-        "test": [
-            " val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)"
-        ],
-        "errormsg": [
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "              ^",
-            "program.kt:1:17: error: expecting comma or ')'",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                ^",
-            "program.kt:1:18: error: expecting ')'",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                 ^",
-            "program.kt:1:19: error: expecting '->' to specify return type of a function type",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                  ^",
-            "program.kt:1:20: error: type expected",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                   ^",
-            "program.kt:1:21: error: expecting comma or ')'",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                    ^",
-            "program.kt:1:21: error: expecting ')'",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                    ^",
-            "program.kt:1:24: error: expecting '->' to specify return type of a function type",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                       ^",
-            "program.kt:1:26: error: type expected",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                         ^",
-            "program.kt:1:28: error: property getter or setter expected",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)",
-            "                           ^",
-            "program.kt:1:9: error: expression '98' of type 'Int' cannot be invoked as a function. The function 'invoke()' is not found",
-            "val b = 98 < (if ((\"bar\" > \"foo\")) 5 else 1)"
-        ],
-        "comment": "",
-        "chars": {
-            "characteristics": [
-                "Conditionals"
             ]
         }
     },
@@ -2885,6 +2885,369 @@
         }
     },
     {
+        "date": "2022-09-08 07:38:37+00:00",
+        "language": "Groovy",
+        "compiler": "groovyc",
+        "version": "",
+        "bugid": "GROOVY-10754",
+        "title": "Incompatible generic argument types when using wildcards",
+        "links": {
+            "issuetracker": "https://issues.apache.org/jira/browse/GROOVY-10754",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "inference",
+        "severity": "",
+        "reporter": "theosot",
+        "status": "Open",
+        "resolution": "",
+        "resolutiondate": "None",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "None",
+        "test": [
+            "class A<T> {}",
+            "class B extends A<Boolean> {}",
+            "class C<T extends A<Boolean>, U extends T> {",
+            "  C(T x, U v) {}",
+            "}",
+            "class Test {",
+            "  void test(B x, B y) {",
+            "    C<? extends B, ? extends B> z = new C<>(x, y);",
+            "  }",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Type argument inference",
+                "Parameterized class",
+                "Parameterized type",
+                "Bounded type parameter",
+                "Inheritance"
+            ]
+        },
+        "errormsg": [],
+        "comment": ""
+    },
+    {
+        "date": "2022-07-22 09:20:58+00:00",
+        "language": "Groovy",
+        "compiler": "groovyc",
+        "version": "",
+        "bugid": "GROOVY-10701",
+        "title": "NullPointerException in instruction selection phase when having conditionals with lambdas and function references",
+        "links": {
+            "issuetracker": "https://issues.apache.org/jira/browse/GROOVY-10701",
+            "fix": ""
+        },
+        "oracle": "crash",
+        "mutator": "generator",
+        "severity": "",
+        "reporter": "theosot",
+        "status": "Resolved",
+        "resolution": "Fixed",
+        "resolutiondate": "2022-07-22 16:22:38+00:00",
+        "symptom": "crash",
+        "bugtype": "",
+        "resolvedin": "7:01:40",
+        "test": [
+            "import java.util.function.Function;",
+            "class Test {",
+            "    <T> void m1(Function<T, T> x) {}",
+            "    double m2(double x) {",
+            "        return x;",
+            "    }",
+            "    void m3() {",
+            "        m1((true) ? (Double x) -> x : this::m2);",
+            "    }",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Conditionals",
+                "Function reference",
+                "SAM type",
+                "Parameterized function"
+            ]
+        },
+        "errormsg": [],
+        "comment": ""
+    },
+    {
+        "date": "2022-07-21 13:07:55+00:00",
+        "language": "Groovy",
+        "compiler": "groovyc",
+        "version": "",
+        "bugid": "GROOVY-10699",
+        "title": "Unable to infer type argument from the parameter type of a lambda",
+        "links": {
+            "issuetracker": "https://issues.apache.org/jira/browse/GROOVY-10699",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "inference",
+        "severity": "",
+        "reporter": "theosot",
+        "status": "Resolved",
+        "resolution": "Fixed",
+        "resolutiondate": "2022-07-24 15:07:09+00:00",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "3 days, 1:59:14",
+        "test": [
+            "import java.util.function.Function;",
+            "import java.util.function.Consumer;",
+            "import java.util.function.Supplier;",
+            "class A<T> {",
+            "  A(C<T> x) {}",
+            "}",
+            "class C<T> {",
+            "  C(T x ) {}",
+            "}",
+            "class B<X> {",
+            "  B(Consumer<X> x) {}",
+            "}",
+            "class D<X> {",
+            "  D(Supplier<X> x) {}",
+            "}",
+            "class Test {",
+            "  void test() {",
+            "    A<String> x = new A<>(new C<>(\"str\")); // type inference works (type inferred based on the constant \"str\")",
+            "    D<String> z = new D<>(() -> \"fda\"); // type inference works (type inferred based on the return type of the lambda)",
+            "    B<String> y = new B<>((String e) -> {return;} ); // type inference doesn't work",
+            "  }",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Type argument inference",
+                "Parameterized class",
+                "Lambda",
+                "SAM type",
+                "Parameterized type"
+            ]
+        },
+        "errormsg": [],
+        "comment": ""
+    },
+    {
+        "date": "2022-07-21 07:47:45+00:00",
+        "language": "Groovy",
+        "compiler": "groovyc",
+        "version": "",
+        "bugid": "GROOVY-10698",
+        "title": "Fail to infer the type argument when using nested diamond operator",
+        "links": {
+            "issuetracker": "https://issues.apache.org/jira/browse/GROOVY-10698",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "inference",
+        "severity": "",
+        "reporter": "theosot",
+        "status": "Resolved",
+        "resolution": "Fixed",
+        "resolutiondate": "2022-07-24 16:55:08+00:00",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "3 days, 9:07:23",
+        "test": [
+            "class A<T> {",
+            "  A(T x, B<T> y) {}",
+            "}",
+            "class B<X> {}",
+            "class Test {",
+            "  void test() {",
+            "    new A<>(\"fda\", new B<>())",
+            "  }",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Type argument inference",
+                "Parameterized class",
+                "Parameterized type"
+            ]
+        },
+        "errormsg": [],
+        "comment": ""
+    },
+    {
+        "date": "2022-07-15 13:40:17+00:00",
+        "language": "Groovy",
+        "compiler": "groovyc",
+        "version": "",
+        "bugid": "GROOVY-10688",
+        "title": "LUB does not work properly when mixing type parameter names and using wildcards",
+        "links": {
+            "issuetracker": "https://issues.apache.org/jira/browse/GROOVY-10688",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "generator",
+        "severity": "",
+        "reporter": "theosot",
+        "status": "Resolved",
+        "resolution": "Fixed",
+        "resolutiondate": "2022-07-25 19:24:57+00:00",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "10 days, 5:44:40",
+        "test": [
+            "class A<T, X> {",
+            "}",
+            "class Test<T> {",
+            "  void test(A<Double, ? extends T> x) {",
+            "    A<Double, ? extends T> y = x;",
+            "    A<Double, ? extends T> z = (true) ? y : x;",
+            "  }",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Parameterized class",
+                "Parameterized type",
+                "Conditionals",
+                "Use-site variance"
+            ]
+        },
+        "errormsg": [],
+        "comment": ""
+    },
+    {
+        "date": "2022-06-29 09:17:54+00:00",
+        "language": "Groovy",
+        "compiler": "groovyc",
+        "version": "",
+        "bugid": "GROOVY-10674",
+        "title": "STC crashes when combining use-site variance with bounded polymorphism",
+        "links": {
+            "issuetracker": "https://issues.apache.org/jira/browse/GROOVY-10674",
+            "fix": ""
+        },
+        "oracle": "crash",
+        "mutator": "inference",
+        "severity": "",
+        "reporter": "schaliasos",
+        "status": "Resolved",
+        "resolution": "Fixed",
+        "resolutiondate": "2022-07-24 16:54:52+00:00",
+        "symptom": "crash",
+        "bugtype": "",
+        "resolvedin": "25 days, 7:36:58",
+        "test": [
+            "class Main {",
+            "  static Foo<Bar<Byte, Byte>, ? super Bar<Byte, Byte>> foo = new Foo<>(new Bar<>())",
+            "}",
+            "class Bar<T extends Number, S extends T> {}",
+            "class Foo<M extends Bar<Byte, ? extends Byte>, D extends M> {",
+            "  D x",
+            "  public Foo(D x) {",
+            "    this.x = x",
+            "  }",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Parameterized class",
+                "Parameterized type",
+                "Bounded type parameter",
+                "Use-site variance",
+                "Type argument inference"
+            ]
+        },
+        "errormsg": [],
+        "comment": ""
+    },
+    {
+        "date": "2022-06-28 22:05:33+00:00",
+        "language": "Groovy",
+        "compiler": "groovyc",
+        "version": "",
+        "bugid": "GROOVY-10670",
+        "title": "Cannot resolve type in the presence of use-site contravariance",
+        "links": {
+            "issuetracker": "https://issues.apache.org/jira/browse/GROOVY-10670",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "generator",
+        "severity": "",
+        "reporter": "schaliasos",
+        "status": "Open",
+        "resolution": "",
+        "resolutiondate": "None",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "None",
+        "test": [
+            "class Main {",
+            "  static final Bar<? super Short> bar = new Bar<Short>((Short) -94)",
+            "  static final short foo = Main.bar.x",
+            "}",
+            "class Bar<P> {",
+            "  public final P x",
+            "  public Bar(P x) { ",
+            "    this.x = x ",
+            "  }",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Parameterized class",
+                "Parameterized type",
+                "Use-site variance"
+            ]
+        },
+        "errormsg": [],
+        "comment": ""
+    },
+    {
+        "date": "2022-06-20 09:36:30+00:00",
+        "language": "Groovy",
+        "compiler": "groovyc",
+        "version": "",
+        "bugid": "GROOVY-10662",
+        "title": "Fail to substitute type variable when encountering conflicting type parameter with a bound",
+        "links": {
+            "issuetracker": "https://issues.apache.org/jira/browse/GROOVY-10662",
+            "fix": ""
+        },
+        "oracle": "error",
+        "mutator": "inference",
+        "severity": "",
+        "reporter": "theosot",
+        "status": "Closed",
+        "resolution": "Fixed",
+        "resolutiondate": "2022-06-21 15:11:46+00:00",
+        "symptom": "Unexpected Compile-Time Error",
+        "bugtype": "",
+        "resolvedin": "1 day, 5:35:16",
+        "test": [
+            "class A<X, T> {",
+            "  A(T p1, X p2) {}",
+            "  void foo(X x) {}",
+            "}",
+            "class B<T extends Number> {",
+            "  void test() {",
+            "    T x = (T) null;",
+            "    Character y = (Character) 'd';",
+            "    new A<>(y, x).foo((T) null);",
+            "  }",
+            "}"
+        ],
+        "chars": {
+            "characteristics": [
+                "Parameterized class",
+                "Parameterized type",
+                "Type argument inference",
+                "Bounded type parameter"
+            ]
+        },
+        "errormsg": [],
+        "comment": ""
+    },
+    {
         "date": "2022-05-20 11:21:39+00:00",
         "language": "Groovy",
         "compiler": "groovyc",
@@ -2899,12 +3262,12 @@
         "mutator": "inference",
         "severity": "",
         "reporter": "theosot",
-        "status": "Open",
-        "resolution": "",
-        "resolutiondate": "None",
+        "status": "Closed",
+        "resolution": "Fixed",
+        "resolutiondate": "2022-06-21 15:11:24+00:00",
         "symptom": "Unexpected Compile-Time Error",
         "bugtype": "",
-        "resolvedin": "None",
+        "resolvedin": "32 days, 3:49:45",
         "test": [
             "class A<T, Y> {",
             "  B<Y> f;",
@@ -3168,7 +3531,7 @@
         "mutator": "inference",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-17 18:58:52+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -3256,7 +3619,7 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-15 16:30:10+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -3352,7 +3715,7 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-17 16:23:58+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -3434,7 +3797,7 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-18 14:58:38+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -3884,7 +4247,7 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-17 14:46:56+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -3935,7 +4298,7 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-17 00:08:20+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -3980,7 +4343,7 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-16 15:00:52+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -4456,7 +4819,7 @@
         "mutator": "inference",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-16 17:17:24+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -4507,7 +4870,7 @@
         "mutator": "inference",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-19 15:55:22+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -4972,7 +5335,7 @@
         "mutator": "inference",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-17 18:40:58+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -5802,7 +6165,7 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-01 15:00:44+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -5849,7 +6212,7 @@
         "mutator": "inference",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-18 15:44:43+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -6301,7 +6664,7 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "theosot",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-18 16:07:43+00:00",
         "symptom": "Unexpected Compile-Time Error",
@@ -6711,12 +7074,12 @@
         "mutator": "generator",
         "severity": "",
         "reporter": "schaliasos",
-        "status": "Resolved",
-        "resolution": "Information Provided",
-        "resolutiondate": "2022-05-18 16:29:02+00:00",
+        "status": "Closed",
+        "resolution": "Fixed",
+        "resolutiondate": "2022-06-23 20:34:05+00:00",
         "symptom": "Unexpected Compile-Time Error",
         "bugtype": "",
-        "resolvedin": "323 days, 23:07:38",
+        "resolvedin": "360 days, 3:12:41",
         "test": [
             "@groovy.transform.TypeChecked",
             "class Test {",
@@ -7561,12 +7924,12 @@
         "mutator": "soundness",
         "severity": "",
         "reporter": "schaliasos",
-        "status": "Open",
-        "resolution": "",
-        "resolutiondate": "None",
+        "status": "Closed",
+        "resolution": "Duplicate",
+        "resolutiondate": "2022-07-11 20:34:29+00:00",
         "symptom": "Unexpected Runtime Behavior",
         "bugtype": "",
-        "resolvedin": "None",
+        "resolvedin": "418 days, 11:56:55",
         "test": [
             "@groovy.transform.TypeChecked",
             "class Main {",
@@ -7726,7 +8089,7 @@
         "mutator": "soundness",
         "severity": "",
         "reporter": "schaliasos",
-        "status": "Resolved",
+        "status": "Closed",
         "resolution": "Fixed",
         "resolutiondate": "2022-05-18 21:51:54+00:00",
         "symptom": "crash",

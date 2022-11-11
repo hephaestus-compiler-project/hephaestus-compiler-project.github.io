@@ -16,12 +16,798 @@
 
 <h2>Bug findings with Type Erasure Mutation</h2>
 
+<h3>Kotlin</h3>
+
+<ul>
+<li>
+<b>
+#1 No smart cast when returning function closures with captured smart-cast variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-43846">https://youtrack.jetbrains.com/issue/KT-43846</a>
+<br>
+<b>Date found</b>:
+2020-12-09
+<br>
+<b>Status</b>:
+Submitted
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun foo(x: Any): String {
+    if (x is String) {
+        val thunk = {x}
+        return thunk()
+    }
+    return "str"
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Flow typing, Variable type inference, Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#2 AssertionError: Variance conflict: type parameter variance 'out' and projection kind 'in' cannot be combined 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-49024">https://youtrack.jetbrains.com/issue/KT-49024</a>
+<br>
+<b>Date found</b>:
+2021-09-30
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo
+class Bar<T1: Foo, out T2>
+class Baz<T1, T2: Bar<Foo, out T2>>
+class Qux<T1, T2: Baz<T2, Bar<Foo, T2>>>(var f: T2)
+class Quux<T> {
+  fun test(): Unit {
+      val x: Qux<in T, Baz<T, Bar<Foo, in T>>> = TODO()
+      x.f = TODO()
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Bounded type parameter, Declaration-site variance, Variable type inference, Use-site variance
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#3 NI: Compile-time error when combining anonymous function and lambda in a conditional 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48764">https://youtrack.jetbrains.com/issue/KT-48764</a>
+<br>
+<b>Date found</b>:
+2021-09-15
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun test(x: Function<Any>): Unit {}
+fun main() {
+    val x: Function<Any> = (
+        if (true) {x: String, y: String -> x + y}
+        else fun(x: String) = x
+    ) // this works
+    test(
+        if (true) { x: String, y: String -> x + y}
+        else fun(x: String) = x
+    ) // this does not work
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function type, Lambda, Return type inference, Subtyping
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#4 NI: Can not infer type of an if expression when passed in a function call and used a type parameter variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47184">https://youtrack.jetbrains.com/issue/KT-47184</a>
+<br>
+<b>Date found</b>:
+2021-06-08
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test<T: Byte> {
+    fun test(z: T) {
+        val y: Byte = if (true) z else 1 // works
+        val x = bar(if (true) z else 1) // fails
+    }
+    fun bar(x: Byte) {}
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Variable type inference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#5 Wrong java.io.Serializable inferred 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-44742">https://youtrack.jetbrains.com/issue/KT-44742</a>
+<br>
+<b>Date found</b>:
+2021-02-05
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun main() {
+    val x = if (true) 1 as Number else false // inferred type is java.io.Serializable
+    x == 1
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Subtyping, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#6 Can not infer type of overridden function 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-44082">https://youtrack.jetbrains.com/issue/KT-44082</a>
+<br>
+<b>Date found</b>:
+2020-12-24
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+interface R<T>
+interface W
+interface J
+open class A
+open class B: A(), R<W>
+open class E: A(), R<J>
+open class C {
+    open fun foo(): A = B()
+}
+class D: C() {
+    override fun foo() = if (true) B() else E()
+}
+val x = if (true) B() else E() // Inferred type of x is Any
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance, Subtyping, Return type inference, Overriding, Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#7 JVM: ArrayIndexOutOfBoundsException on compiling call with `if` expression and TODO() arguments  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-49092">https://youtrack.jetbrains.com/issue/KT-49092</a>
+<br>
+<b>Date found</b>:
+2021-10-05
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-12-22
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A {
+    fun foo(x: Any, y: CharArray): Boolean = true
+}
+val x: A = A()
+val y: Boolean = true
+val z: Long = -61
+val k = x.foo((if (y) z else Any()), TODO())
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Array, Conditionals, Variable type inference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#8 ClassCastException caused by parent and child class in if-else  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-45118">https://youtrack.jetbrains.com/issue/KT-45118</a>
+<br>
+<b>Date found</b>:
+2021-02-22
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-09-29
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+open class Foo(open val x: Boolean)
+class Bar: Foo(false)
+fun contract(x: Foo) =
+  x
+val temp = if (true) contract(Bar()) else Bar()
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Return type inference, Inheritance, Conditionals, Subtyping
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/b5661ccabd8'>https://github.com/JetBrains/kotlin/commit/b5661ccabd8</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#9 Cannot infer type of overridden function with generic 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-44595">https://youtrack.jetbrains.com/issue/KT-44595</a>
+<br>
+<b>Date found</b>:
+2021-01-28
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+As Designed
+<br>
+<b>Resolution date</b>:
+2021-09-08
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class X<T> (val x: T)
+open class A {
+    open fun foo(): X<A> =
+       X(A())
+} 
+class B: A() {
+    override fun foo() =
+      X(B())
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance, Overriding, Type argument inference, Return type inference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#10 Imprecise type is inferred in an if expression 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-44551">https://youtrack.jetbrains.com/issue/KT-44551</a>
+<br>
+<b>Date found</b>:
+2021-01-26
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+As Designed
+<br>
+<b>Resolution date</b>:
+2021-09-08
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+   open class A
+   open class B: A()
+   class X<T: A>(val x: T)
+   fun foo(x: X<A>) = {}
+   val tmp = if (true) X<A>(A()) else X(B())
+   fun main() {
+       foo(tmp)
+   }
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance, Bounded type parameter, Subtyping, Conditionals, Type argument inference, Variable type inference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#11 ClassCastException when calling a function with a nullable generic vararg parameter 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-46684">https://youtrack.jetbrains.com/issue/KT-46684</a>
+<br>
+<b>Date found</b>:
+2021-05-14
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Duplicate
+<br>
+<b>Resolution date</b>:
+2021-05-14
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test {
+    fun foo() {
+        m("str", null);
+    }
+    fun <T: Number> m(obj: Any, vararg t: T?) {
+        println("here")
+    }
+}
+fun main() {
+    Test().foo()
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Bounded type parameter, Parameterized function, Type argument inference, Variable arguments
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#12 JVM / IR: "IllegalStateException: Illegal type substitutor" with if-else inside class constructor argument inside another if-else  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-44651">https://youtrack.jetbrains.com/issue/KT-44651</a>
+<br>
+<b>Date found</b>:
+2021-02-01
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-02-11
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class X<T: Number>(val y: Any, val x: T)
+fun main() {
+  val num: Long = -10
+  val num2: Int = 20
+  val obj = if (true)
+      X(Any(), if (true) num else num2)
+    else
+      X(Any(), -25)
+   val f = obj.y
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter, Parameterized type, Type argument inference, Variable type inference, Conditionals
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/f797ee78035'>https://github.com/JetBrains/kotlin/commit/f797ee78035</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+</ul>
+
 <h3>Groovy</h3>
 
 <ul>
 <li>
 <b>
-#1 Invalid type substitution when encountering bounded type parameter and the diamond operator 
+#13 Incompatible generic argument types when using wildcards 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10754">https://issues.apache.org/jira/browse/GROOVY-10754</a>
+<br>
+<b>Date found</b>:
+2022-09-08
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {}
+class B extends A<Boolean> {}
+class C<T extends A<Boolean>, U extends T> {
+  C(T x, U v) {}
+}
+class Test {
+  void test(B x, B y) {
+    C<? extends B, ? extends B> z = new C<>(x, y);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Type argument inference, Parameterized class, Parameterized type, Bounded type parameter, Inheritance
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#14 Unable to infer type argument from the parameter type of a lambda  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10699">https://issues.apache.org/jira/browse/GROOVY-10699</a>
+<br>
+<b>Date found</b>:
+2022-07-21
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-07-24
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+class A<T> {
+  A(C<T> x) {}
+}
+class C<T> {
+  C(T x ) {}
+}
+class B<X> {
+  B(Consumer<X> x) {}
+}
+class D<X> {
+  D(Supplier<X> x) {}
+}
+class Test {
+  void test() {
+    A<String> x = new A<>(new C<>("str")); // type inference works (type inferred based on the constant "str")
+    D<String> z = new D<>(() -> "fda"); // type inference works (type inferred based on the return type of the lambda)
+    B<String> y = new B<>((String e) -> {return;} ); // type inference doesn't work
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Type argument inference, Parameterized class, Lambda, SAM type, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#15 Fail to infer the type argument when using nested diamond operator  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10698">https://issues.apache.org/jira/browse/GROOVY-10698</a>
+<br>
+<b>Date found</b>:
+2022-07-21
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-07-24
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<T> {
+  A(T x, B<T> y) {}
+}
+class B<X> {}
+class Test {
+  void test() {
+    new A<>("fda", new B<>())
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Type argument inference, Parameterized class, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#16 STC crashes when combining use-site variance with bounded polymorphism  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10674">https://issues.apache.org/jira/browse/GROOVY-10674</a>
+<br>
+<b>Date found</b>:
+2022-06-29
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-07-24
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Main {
+  static Foo<Bar<Byte, Byte>, ? super Bar<Byte, Byte>> foo = new Foo<>(new Bar<>())
+}
+class Bar<T extends Number, S extends T> {}
+class Foo<M extends Bar<Byte, ? extends Byte>, D extends M> {
+  D x
+  public Foo(D x) {
+    this.x = x
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Bounded type parameter, Use-site variance, Type argument inference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#17 Fail to substitute type variable when encountering conflicting type parameter with a bound  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10662">https://issues.apache.org/jira/browse/GROOVY-10662</a>
+<br>
+<b>Date found</b>:
+2022-06-20
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-06-21
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class A<X, T> {
+  A(T p1, X p2) {}
+  void foo(X x) {}
+}
+class B<T extends Number> {
+  void test() {
+    T x = (T) null;
+    Character y = (Character) 'd';
+    new A<>(y, x).foo((T) null);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Type argument inference, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#18 Invalid type substitution when encountering bounded type parameter and the diamond operator  -- Fixed
 </b>
 
 <details>
@@ -33,9 +819,13 @@
 2022-05-20
 <br>
 <b>Status</b>:
-Open
-
-
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-06-21
 <br>
 <b>Symptom</b>:
 Unexpected compile-time error
@@ -67,7 +857,7 @@ Parameterized class, Parameterized type, Parameterized function, Bounded type pa
 </li>
 <li>
 <b>
-#2 Nested diamond operators do not work correctly although the expected type argument is known  -- Fixed
+#19 Nested diamond operators do not work correctly although the expected type argument is known  -- Fixed
 </b>
 
 <details>
@@ -79,7 +869,7 @@ Parameterized class, Parameterized type, Parameterized function, Bounded type pa
 2022-05-13
 <br>
 <b>Status</b>:
-Resolved
+Closed
 <br>
 <b>Resolution</b>:
 Fixed
@@ -113,7 +903,7 @@ Parameterized class, Parameterized type, Type argument inference
 </li>
 <li>
 <b>
-#3 Type mismatch when encountering unconditional flow typing and null  -- Fixed
+#20 Type mismatch when encountering unconditional flow typing and null  -- Fixed
 </b>
 
 <details>
@@ -165,7 +955,7 @@ Flow typing
 </li>
 <li>
 <b>
-#4 Fail to infer the correct type argument when having conditionals and diamond operator 
+#21 Fail to infer the correct type argument when having conditionals and diamond operator 
 </b>
 
 <details>
@@ -205,7 +995,7 @@ Conditionals, Type argument inference, Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#5 Incomplete type variable substitution when using wildcard type and diamond operator  -- Fixed
+#22 Incomplete type variable substitution when using wildcard type and diamond operator  -- Fixed
 </b>
 
 <details>
@@ -258,7 +1048,7 @@ Bounded type parameter, Parameterized type, Parameterized class, Type argument i
 </li>
 <li>
 <b>
-#6 Closure that assigns null to object changes the type of variable 
+#23 Closure that assigns null to object changes the type of variable 
 </b>
 
 <details>
@@ -314,7 +1104,7 @@ Flow typing, Lambda, Variable type inference
 </li>
 <li>
 <b>
-#7 STC fails to instantiate type variable when using diamond operator  -- Fixed
+#24 STC fails to instantiate type variable when using diamond operator  -- Fixed
 </b>
 
 <details>
@@ -363,7 +1153,7 @@ Parameterized class, Bounded type parameter, Type argument inference
 </li>
 <li>
 <b>
-#8 STC fails to infer the correct type for type variable in the presence of the diamond operator and bounded polymorphism  -- Fixed
+#25 STC fails to infer the correct type for type variable in the presence of the diamond operator and bounded polymorphism  -- Fixed
 </b>
 
 <details>
@@ -410,7 +1200,7 @@ Parameterized class, Bounded type parameter, Type argument inference
 </li>
 <li>
 <b>
-#9 STC changes the inferred type of variable in the presence of flow typing  -- Fixed
+#26 STC changes the inferred type of variable in the presence of flow typing  -- Fixed
 </b>
 
 <details>
@@ -459,7 +1249,7 @@ Variable type inference, Flow typing, Lambda
 </li>
 <li>
 <b>
-#10 Wrong type argument is inferred on combining use-site variance and diamond operator  -- Fixed
+#27 Wrong type argument is inferred on combining use-site variance and diamond operator  -- Fixed
 </b>
 
 <details>
@@ -506,7 +1296,7 @@ Parameterized class, Parameterized type, Use-site variance, Type argument infere
 </li>
 <li>
 <b>
-#11 STC crashes when bound has two wildcard types as type arguments  -- Fixed
+#28 STC crashes when bound has two wildcard types as type arguments  -- Fixed
 </b>
 
 <details>
@@ -553,7 +1343,7 @@ Parameterized class, Parameterized type, Variable type inference, Type argument 
 </li>
 <li>
 <b>
-#12 STC fails to infer dependent type variable  -- Fixed
+#29 STC fails to infer dependent type variable  -- Fixed
 </b>
 
 <details>
@@ -565,7 +1355,7 @@ Parameterized class, Parameterized type, Variable type inference, Type argument 
 2021-11-03
 <br>
 <b>Status</b>:
-Resolved
+Closed
 <br>
 <b>Resolution</b>:
 Fixed
@@ -604,7 +1394,7 @@ Parameterized class, Bounded type parameter, Variable type inference, Parameteri
 </li>
 <li>
 <b>
-#13 STC is unable to infer type parameter of parameterized method call  -- Fixed
+#30 STC is unable to infer type parameter of parameterized method call  -- Fixed
 </b>
 
 <details>
@@ -616,7 +1406,7 @@ Parameterized class, Bounded type parameter, Variable type inference, Parameteri
 2021-11-03
 <br>
 <b>Status</b>:
-Resolved
+Closed
 <br>
 <b>Resolution</b>:
 Fixed
@@ -654,7 +1444,7 @@ Parameterized class, Parameterized function, Bounded type parameter, Parameteriz
 </li>
 <li>
 <b>
-#14 STC is unable to infer type variable when combining parameterized types and the diamond operator  -- Fixed
+#31 STC is unable to infer type variable when combining parameterized types and the diamond operator  -- Fixed
 </b>
 
 <details>
@@ -700,7 +1490,7 @@ Parameterized class, Parameterized type, Parameterized function, Type argument i
 </li>
 <li>
 <b>
-#15 Type variable inference does not work properly in nested diamond operators  -- Fixed
+#32 Type variable inference does not work properly in nested diamond operators  -- Fixed
 </b>
 
 <details>
@@ -712,7 +1502,7 @@ Parameterized class, Parameterized type, Parameterized function, Type argument i
 2021-10-18
 <br>
 <b>Status</b>:
-Resolved
+Closed
 <br>
 <b>Resolution</b>:
 Fixed
@@ -755,7 +1545,7 @@ Parameterized class, Parameterized type, Type argument inference, Variable type 
 </li>
 <li>
 <b>
-#16 STC is unable to call parameterized function  -- Fixed
+#33 STC is unable to call parameterized function  -- Fixed
 </b>
 
 <details>
@@ -809,7 +1599,7 @@ Parameterized class, Parameterized type, Parameterized function, Use-site varian
 </li>
 <li>
 <b>
-#17 SC incorrectly reports "access to Object#field" is forbidden  -- Fixed
+#34 SC incorrectly reports "access to Object#field" is forbidden  -- Fixed
 </b>
 
 <details>
@@ -865,7 +1655,7 @@ Parameterized class, Parameterized type, Lambda, Variable type inference
 </li>
 <li>
 <b>
-#18 Variable's inferred type is upcasted to an Object  -- Fixed
+#35 Variable's inferred type is upcasted to an Object  -- Fixed
 </b>
 
 <details>
@@ -911,7 +1701,7 @@ Variable type inference, Flow typing
 </li>
 <li>
 <b>
-#19 STC fails to substitute type variable when using the diamond operator and calling a closure  -- Fixed
+#36 STC fails to substitute type variable when using the diamond operator and calling a closure  -- Fixed
 </b>
 
 <details>
@@ -963,7 +1753,7 @@ Parameterized class, Parameterized type, Lambda, Type argument inference, Variab
 </li>
 <li>
 <b>
-#20 STC: Stackoverflow Error when passing function reference to closure  -- Fixed
+#37 STC: Stackoverflow Error when passing function reference to closure  -- Fixed
 </b>
 
 <details>
@@ -1019,7 +1809,7 @@ Function type, Function reference, Variable type inference, Lambda
 </li>
 <li>
 <b>
-#21 The diamond operator does not work when passing a value whose type is a type variable  -- Fixed
+#38 The diamond operator does not work when passing a value whose type is a type variable  -- Fixed
 </b>
 
 <details>
@@ -1031,7 +1821,7 @@ Function type, Function reference, Variable type inference, Lambda
 2021-09-27
 <br>
 <b>Status</b>:
-Resolved
+Closed
 <br>
 <b>Resolution</b>:
 Fixed
@@ -1070,7 +1860,7 @@ Parameterized class, Type argument inference, Parameterized type
 </li>
 <li>
 <b>
-#22 STC is unable to resolve variable in closure 
+#39 STC is unable to resolve variable in closure 
 </b>
 
 <details>
@@ -1114,7 +1904,7 @@ Function type, Variable type inference, Lambda
 </li>
 <li>
 <b>
-#23 Issue with the diamond operator and conditional 
+#40 Issue with the diamond operator and conditional 
 </b>
 
 <details>
@@ -1164,7 +1954,7 @@ Parameterized class, Parameterized type, Bounded type parameter, Conditionals, T
 </li>
 <li>
 <b>
-#24 STC fails to substitute type variable in the presence of the diamond operator and a function call  -- Fixed
+#41 STC fails to substitute type variable in the presence of the diamond operator and a function call  -- Fixed
 </b>
 
 <details>
@@ -1216,7 +2006,7 @@ Parameterized class, Parameterized type, Type argument inference
 </li>
 <li>
 <b>
-#25 Unexpected compile-time error when combining closures and bounded type parameters  -- Fixed
+#42 Unexpected compile-time error when combining closures and bounded type parameters  -- Fixed
 </b>
 
 <details>
@@ -1260,7 +2050,7 @@ Parameterized class, Bounded type parameter, Function type, Lambda, Variable typ
 </li>
 <li>
 <b>
-#26 Wrong type argument inference when using the result of ternary operator directly.  -- Fixed
+#43 Wrong type argument inference when using the result of ternary operator directly.  -- Fixed
 </b>
 
 <details>
@@ -1319,7 +2109,7 @@ Type argument inference, Conditionals, Parameterized type, Parameterized class
 </li>
 <li>
 <b>
-#27 Closure with type argument inference does not work as expected  -- Fixed
+#44 Closure with type argument inference does not work as expected  -- Fixed
 </b>
 
 <details>
@@ -1386,7 +2176,7 @@ Type argument inference, Lambda, Parameterized class, Parameterized type, Array,
 </li>
 <li>
 <b>
-#28 Combining flow typing and type argument inference does not work as expected  -- Fixed
+#45 Combining flow typing and type argument inference does not work as expected  -- Fixed
 </b>
 
 <details>
@@ -1446,7 +2236,7 @@ Parameterized class, Parameterized type, Inheritance, Type argument inference, F
 </li>
 <li>
 <b>
-#29 Cannot infer correct type argument when using subtyping  -- Fixed
+#46 Cannot infer correct type argument when using subtyping  -- Fixed
 </b>
 
 <details>
@@ -1508,7 +2298,7 @@ Parameterized class, Parameterized type, Type argument inference, Inheritance, V
 </li>
 <li>
 <b>
-#30 Wrong inference inside closure when having a bounded type parameter  -- Fixed
+#47 Wrong inference inside closure when having a bounded type parameter  -- Fixed
 </b>
 
 <details>
@@ -1571,7 +2361,7 @@ Parameterized class, Parameterized type, Bounded type parameter, Type argument i
 </li>
 <li>
 <b>
-#31 Wrong type inference when passing null  -- Fixed
+#48 Wrong type inference when passing null  -- Fixed
 </b>
 
 <details>
@@ -1630,7 +2420,7 @@ Parameterized class, Parameterized type, Type argument inference
 </li>
 <li>
 <b>
-#32 Type argument inference does not work in ternary operator  -- Fixed
+#49 Type argument inference does not work in ternary operator  -- Fixed
 </b>
 
 <details>
@@ -1692,7 +2482,7 @@ Parameterized class, Parameterized type, Inheritance, Subtyping, Type argument i
 </li>
 <li>
 <b>
-#33 LUB does not work correctly in case of ternary operator  -- Fixed
+#50 LUB does not work correctly in case of ternary operator  -- Fixed
 </b>
 
 <details>
@@ -1764,7 +2554,7 @@ Parameterized class, Parameterized type, Type argument inference, Conditionals
 </li>
 <li>
 <b>
-#34 Type argument inference does not work in closure  -- Fixed
+#51 Type argument inference does not work in closure  -- Fixed
 </b>
 
 <details>
@@ -1825,7 +2615,7 @@ Parameterized class, Bounded type parameter, Lambda, Type argument inference
 </li>
 <li>
 <b>
-#35 Generic type of field is not instantiated  -- Fixed
+#52 Generic type of field is not instantiated  -- Fixed
 </b>
 
 <details>
@@ -1882,7 +2672,7 @@ Parameterized class, Parameterized type, Type argument inference
 </li>
 <li>
 <b>
-#36 Cannot infer correct type argument when passing a subtype of the declared type argument  -- Fixed
+#53 Cannot infer correct type argument when passing a subtype of the declared type argument  -- Fixed
 </b>
 
 <details>
@@ -1945,7 +2735,7 @@ Parameterized class, Subtyping, Inheritance, Parameterized type, Type argument i
 </li>
 <li>
 <b>
-#37 Type from flow typing is not propagated in variable assignments  -- Fixed
+#54 Type from flow typing is not propagated in variable assignments  -- Fixed
 </b>
 
 <details>
@@ -2002,7 +2792,7 @@ Variable type inference, Flow typing, Conditionals
 </li>
 <li>
 <b>
-#38 Cannot infer the correct type in the presence of diamond operator  -- Fixed
+#55 Cannot infer the correct type in the presence of diamond operator  -- Fixed
 </b>
 
 <details>
@@ -2062,7 +2852,7 @@ Parameterized class, Parameterized type, Type argument inference
 </li>
 <li>
 <b>
-#39 int reference seems to not use its wrapper class  -- Fixed
+#56 int reference seems to not use its wrapper class  -- Fixed
 </b>
 
 <details>
@@ -2114,7 +2904,7 @@ Variable type inference, Subtyping
 </li>
 <li>
 <b>
-#40 Bounded type parameter is not captured by closure  -- Fixed
+#57 Bounded type parameter is not captured by closure  -- Fixed
 </b>
 
 <details>
@@ -2158,7 +2948,7 @@ Parameterized class, Bounded type parameter, Variable type inference, Lambda
 </li>
 <li>
 <b>
-#41 Type tracked from instanceof condition is not captured in closure  -- Fixed
+#58 Type tracked from instanceof condition is not captured in closure  -- Fixed
 </b>
 
 <details>
@@ -2216,555 +3006,12 @@ Lambda, Flow typing, Variable type inference
 </li>
 </ul>
 
-<h3>Kotlin</h3>
-
-<ul>
-<li>
-<b>
-#42 AssertionError: Variance conflict: type parameter variance 'out' and projection kind 'in' cannot be combined 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-49024">https://youtrack.jetbrains.com/issue/KT-49024</a>
-<br>
-<b>Date found</b>:
-2021-09-30
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo
-class Bar<T1: Foo, out T2>
-class Baz<T1, T2: Bar<Foo, out T2>>
-class Qux<T1, T2: Baz<T2, Bar<Foo, T2>>>(var f: T2)
-class Quux<T> {
-  fun test(): Unit {
-      val x: Qux<in T, Baz<T, Bar<Foo, in T>>> = TODO()
-      x.f = TODO()
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Bounded type parameter, Declaration-site variance, Variable type inference, Use-site variance
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#43 NI: Compile-time error when combining anonymous function and lambda in a conditional 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-48764">https://youtrack.jetbrains.com/issue/KT-48764</a>
-<br>
-<b>Date found</b>:
-2021-09-15
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-fun test(x: Function<Any>): Unit {}
-fun main() {
-    val x: Function<Any> = (
-        if (true) {x: String, y: String -> x + y}
-        else fun(x: String) = x
-    ) // this works
-    test(
-        if (true) { x: String, y: String -> x + y}
-        else fun(x: String) = x
-    ) // this does not work
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Function type, Lambda, Return type inference, Subtyping
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#44 NI: Can not infer type of an if expression when passed in a function call and used a type parameter variable 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-47184">https://youtrack.jetbrains.com/issue/KT-47184</a>
-<br>
-<b>Date found</b>:
-2021-06-08
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Test<T: Byte> {
-    fun test(z: T) {
-        val y: Byte = if (true) z else 1 // works
-        val x = bar(if (true) z else 1) // fails
-    }
-    fun bar(x: Byte) {}
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter, Variable type inference
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#45 Wrong java.io.Serializable inferred 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-44742">https://youtrack.jetbrains.com/issue/KT-44742</a>
-<br>
-<b>Date found</b>:
-2021-02-05
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-fun main() {
-    val x = if (true) 1 as Number else false // inferred type is java.io.Serializable
-    x == 1
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Subtyping, Conditionals
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#46 Can not infer type of overridden function 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-44082">https://youtrack.jetbrains.com/issue/KT-44082</a>
-<br>
-<b>Date found</b>:
-2020-12-24
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-interface R<T>
-interface W
-interface J
-open class A
-open class B: A(), R<W>
-open class E: A(), R<J>
-open class C {
-    open fun foo(): A = B()
-}
-class D: C() {
-    override fun foo() = if (true) B() else E()
-}
-val x = if (true) B() else E() // Inferred type of x is Any
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Subtyping, Return type inference, Overriding, Conditionals
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#47 JVM: ArrayIndexOutOfBoundsException on compiling call with `if` expression and TODO() arguments  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-49092">https://youtrack.jetbrains.com/issue/KT-49092</a>
-<br>
-<b>Date found</b>:
-2021-10-05
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-12-22
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class A {
-    fun foo(x: Any, y: CharArray): Boolean = true
-}
-val x: A = A()
-val y: Boolean = true
-val z: Long = -61
-val k = x.foo((if (y) z else Any()), TODO())
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Array, Conditionals, Variable type inference
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#48 ClassCastException caused by parent and child class in if-else  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-45118">https://youtrack.jetbrains.com/issue/KT-45118</a>
-<br>
-<b>Date found</b>:
-2021-02-22
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-09-29
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-open class Foo(open val x: Boolean)
-class Bar: Foo(false)
-fun contract(x: Foo) =
-  x
-val temp = if (true) contract(Bar()) else Bar()
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Return type inference, Inheritance, Conditionals, Subtyping
-<br>
-<b>Fix Commit(s)</b>:
-<ul>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/b5661ccabd8'>https://github.com/JetBrains/kotlin/commit/b5661ccabd8</a>
-</li>
-
-</ul>
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#49 No smart cast when returning function closures with captured smart-cast variable 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-43846">https://youtrack.jetbrains.com/issue/KT-43846</a>
-<br>
-<b>Date found</b>:
-2020-12-09
-<br>
-<b>Status</b>:
-Submitted
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-fun foo(x: Any): String {
-    if (x is String) {
-        val thunk = {x}
-        return thunk()
-    }
-    return "str"
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Flow typing, Variable type inference, Lambda
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#50 Cannot infer type of overridden function with generic 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-44595">https://youtrack.jetbrains.com/issue/KT-44595</a>
-<br>
-<b>Date found</b>:
-2021-01-28
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-As Designed
-<br>
-<b>Resolution date</b>:
-2021-09-08
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class X<T> (val x: T)
-open class A {
-    open fun foo(): X<A> =
-       X(A())
-} 
-class B: A() {
-    override fun foo() =
-      X(B())
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Overriding, Type argument inference, Return type inference
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#51 Imprecise type is inferred in an if expression 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-44551">https://youtrack.jetbrains.com/issue/KT-44551</a>
-<br>
-<b>Date found</b>:
-2021-01-26
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-As Designed
-<br>
-<b>Resolution date</b>:
-2021-09-08
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-   open class A
-   open class B: A()
-   class X<T: A>(val x: T)
-   fun foo(x: X<A>) = {}
-   val tmp = if (true) X<A>(A()) else X(B())
-   fun main() {
-       foo(tmp)
-   }
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Bounded type parameter, Subtyping, Conditionals, Type argument inference, Variable type inference
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#52 ClassCastException when calling a function with a nullable generic vararg parameter 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-46684">https://youtrack.jetbrains.com/issue/KT-46684</a>
-<br>
-<b>Date found</b>:
-2021-05-14
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Duplicate
-<br>
-<b>Resolution date</b>:
-2021-05-14
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Test {
-    fun foo() {
-        m("str", null);
-    }
-    fun <T: Number> m(obj: Any, vararg t: T?) {
-        println("here")
-    }
-}
-fun main() {
-    Test().foo()
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Bounded type parameter, Parameterized function, Type argument inference, Variable arguments
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#53 JVM / IR: "IllegalStateException: Illegal type substitutor" with if-else inside class constructor argument inside another if-else  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-44651">https://youtrack.jetbrains.com/issue/KT-44651</a>
-<br>
-<b>Date found</b>:
-2021-02-01
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-02-11
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class X<T: Number>(val y: Any, val x: T)
-fun main() {
-  val num: Long = -10
-  val num2: Int = 20
-  val obj = if (true)
-      X(Any(), if (true) num else num2)
-    else
-      X(Any(), -25)
-   val f = obj.y
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter, Parameterized type, Type argument inference, Variable type inference, Conditionals
-<br>
-<b>Fix Commit(s)</b>:
-<ul>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/f797ee78035'>https://github.com/JetBrains/kotlin/commit/f797ee78035</a>
-</li>
-
-</ul>
-
-<br>
-<br>
-</details>
-</li>
-</ul>
-
 <h3>Java</h3>
 
 <ul>
 <li>
 <b>
-#54 Wrong Type-Argument inference in presence of bounds and use-site variance 
+#59 Wrong Type-Argument inference in presence of bounds and use-site variance 
 </b>
 
 <details>
@@ -2822,7 +3069,7 @@ Parameterized class, Parameterized type, Bounded type parameter, Use-site varian
 </li>
 <li>
 <b>
-#55 Imprecise type inference in the presence of ternary operator and wildcard 
+#60 Imprecise type inference in the presence of ternary operator and wildcard 
 </b>
 
 <details>
@@ -2870,7 +3117,7 @@ Parameterized class, Parameterized type, Use-site variance, Conditionals, Variab
 </li>
 <li>
 <b>
-#56 Wrong type inference in presence of a generic with bound to Double 
+#61 Wrong type inference in presence of a generic with bound to Double 
 </b>
 
 <details>

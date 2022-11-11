@@ -16,12 +16,68 @@
 
 <h2>Bug findings with Type Erasure and Type Overwriting Mutation</h2>
 
+<h3>Kotlin</h3>
+
+<ul>
+<li>
+<b>
+#1 NI: Inferred type does not respect the bound of type variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48765">https://youtrack.jetbrains.com/issue/KT-48765</a>
+<br>
+<b>Date found</b>:
+2021-09-15
+<br>
+<b>Status</b>:
+Open
+
+<br>
+<b>Resolution date</b>:
+2022-04-28
+<br>
+<b>Symptom</b>:
+Unexpected runtime behavior
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+open class A<T1, T2> {}
+class B {
+    fun <T1: Number, T2: A<Float, T1>> foo(x1: T2, x2: T1) {}
+}
+class C<T: D, T2>(val x: T, val y: T2) {
+    fun test() {
+        B().foo(x, foo())
+    }
+}
+open class D: A<Float, Number>()
+fun <T: String> foo(): T  {
+    return "" as T // this cast is safe because String is final.
+}
+fun main() {
+    C(D(), 10.5).test()
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Parameterized function, Bounded type parameter, Type argument inference, Subtyping
+
+<br>
+<br>
+</details>
+</li>
+</ul>
+
 <h3>Groovy</h3>
 
 <ul>
 <li>
 <b>
-#1 STC misses type error when calling a vararg method  -- Fixed
+#2 STC misses type error when calling a vararg method  -- Fixed
 </b>
 
 <details>
@@ -80,62 +136,6 @@ Parameterized class, Parameterized type, Variable arguments, Type argument infer
 </li>
 
 </ul>
-
-<br>
-<br>
-</details>
-</li>
-</ul>
-
-<h3>Kotlin</h3>
-
-<ul>
-<li>
-<b>
-#2 NI: Inferred type does not respect the bound of type variable 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-48765">https://youtrack.jetbrains.com/issue/KT-48765</a>
-<br>
-<b>Date found</b>:
-2021-09-15
-<br>
-<b>Status</b>:
-Open
-
-<br>
-<b>Resolution date</b>:
-2022-04-28
-<br>
-<b>Symptom</b>:
-Unexpected runtime behavior
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-open class A<T1, T2> {}
-class B {
-    fun <T1: Number, T2: A<Float, T1>> foo(x1: T2, x2: T1) {}
-}
-class C<T: D, T2>(val x: T, val y: T2) {
-    fun test() {
-        B().foo(x, foo())
-    }
-}
-open class D: A<Float, Number>()
-fun <T: String> foo(): T  {
-    return "" as T // this cast is safe because String is final.
-}
-fun main() {
-    C(D(), 10.5).test()
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Parameterized function, Bounded type parameter, Type argument inference, Subtyping
 
 <br>
 <br>
