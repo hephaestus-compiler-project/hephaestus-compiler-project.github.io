@@ -16,787 +16,1406 @@
 
 <h2>Bug findings with Program Generator</h2>
 
-<h3>Kotlin</h3>
-
-<ul>
-<li>
-<b>
-#1 NI: Unexpected TYPE_MISMATCH when combining nested conditional and contravariant type argument 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-47530">https://youtrack.jetbrains.com/issue/KT-47530</a>
-<br>
-<b>Date found</b>:
-2021-06-30
-<br>
-<b>Status</b>:
-Open
-
-<br>
-<b>Resolution date</b>:
-2022-07-28
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<T>
-fun main() {
-    val x: Foo<in Long> =
-      if (true) Foo<Long>()
-      else
-        if (true) Foo<Long>()
-        else Foo<Number>()
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Use-site variance, Conditionals, Subtyping
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#2 NI: NullPointerException on compiling anonymous function returning a method reference 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-49583">https://youtrack.jetbrains.com/issue/KT-49583</a>
-<br>
-<b>Date found</b>:
-2021-11-06
-<br>
-<b>Status</b>:
-Open
-
-<br>
-<b>Resolution date</b>:
-2022-07-28
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo(var pickaxe: Function0<Function1<Char, Any>>)
-interface I {
-  fun m(): Int
-}
-fun test() {
-  val x = Foo({ -> fun (p: Char): Any {
-      fun inner_m(): Any {
-        val x: I = TODO()
-        x::m
-      }
-      return inner_m()
-     }}
-  )
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-SAM type, Function type, Function reference, Lambda
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#3 "Unexpected tokens" when `if` statement contains double parenthesis in variable assignment 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-43806">https://youtrack.jetbrains.com/issue/KT-43806</a>
-<br>
-<b>Date found</b>:
-2020-12-07
-<br>
-<b>Status</b>:
-Submitted
-
-<br>
-<b>Resolution date</b>:
-2022-06-08
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
- val b = 98 < (if (("bar" > "foo")) 5 else 1)
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Conditionals
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#4 Support SAM conversions on value parameters inferred into Kotlin functional interface 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-48838">https://youtrack.jetbrains.com/issue/KT-48838</a>
-<br>
-<b>Date found</b>:
-2021-09-21
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-fun interface FI {
-    fun foo(i: Int): Int
-}
-fun test1(x: FI) {}
-fun <T> test2(x: T) {}
-fun main() {
-    test1({x: Int -> x})
-    test2<FI>({x: Int -> x}) // error [TYPE_MISMATCH] Type mismatch.
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-SAM type, Parameterized function, Lambda
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#5 TYPE_MISMATCH when using a SAM type with star projection 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-52307">https://youtrack.jetbrains.com/issue/KT-52307</a>
-<br>
-<b>Date found</b>:
-2022-05-06
-<br>
-<b>Status</b>:
-Submitted
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-import java.util.function.Function;
-class A(val x: Function<*, String>)
-fun main() {
-    A({ x: String -> x })
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Lambda, SAM type, Subtyping
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#6 Inconsistency in overload resolution when calling a scope function 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-48958">https://youtrack.jetbrains.com/issue/KT-48958</a>
-<br>
-<b>Date found</b>:
-2021-09-28
-<br>
-<b>Status</b>:
-Submitted
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-fun run(x: String): Unit  {}
-inline fun <R> test(block: () -> R): R = block()
-fun test(x: String): Unit {}
-fun <T> ret(): T = TODO()
-class A {
-  fun d() {
-    test(ret()) // Calls test(x: String): Unit
-    run(ret()) // Calls <R> run(block: () -> R): R
-  }
-}
-fun main() {
-    test(ret()) // Calls test(x: String): Unit
-    run(ret()) // Calls run(x: String): Unit
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized function, Function type
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#7 TYPE_MISMATCH when combining use-site variance with bounded polymorphism 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-47508">https://youtrack.jetbrains.com/issue/KT-47508</a>
-<br>
-<b>Date found</b>:
-2021-06-28
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-open class A
-open class B: A()
-class C : B()
-class Foo<T : A>(val x: T)
-fun main() {
-    val x: Foo<in C> = TODO()
-    val y: A = x.x
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Inheritance, Parameterized class, Parameterized type, Use-site variance, Bounded type parameter, Subtyping
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#8 NI: Wrong type is inferred on combining conditional and contravariant type argument 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-47231">https://youtrack.jetbrains.com/issue/KT-47231</a>
-<br>
-<b>Date found</b>:
-2021-06-10
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Foo<T>
-class Bar(val x : Foo<in Float>)
-fun main() {
-    val x: Foo<in Float> = Foo<Float>()
-    val y: Foo<in Float> = Foo<Float>()
-    Bar(x) // works
-    val z = if (true) x else y
-    Bar(z) // works
-    Bar(if (true) x else y) // fails
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Use-site variance
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#9 False positive "NOTHING_TO_OVERRIDE" when combining varargs with type parameters 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-46662">https://youtrack.jetbrains.com/issue/KT-46662</a>
-<br>
-<b>Date found</b>:
-2021-05-13
-<br>
-<b>Status</b>:
-Open
-
-
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-open class A<T> {
-    open fun foo(vararg x: T) {}
-}
-class B: A<Float>() {
-    override fun foo(vararg x: Float) {} // NOTHING_TO_OVERRIDE
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Overriding, Variable arguments
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#10 JVM IR: "IndexOutOfBoundsException: Cannot pop operand off an empty stack" on compiling unused identity equality of Double literals  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-46864">https://youtrack.jetbrains.com/issue/KT-46864</a>
-<br>
-<b>Date found</b>:
-2021-05-21
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-05-31
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-fun m(): Unit
-{
-  (40.523 !== 62.562)
-}
-</xmp>
-</pre>
-
-<br>
-<b>Fix Commit(s)</b>:
-<ul>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/9091ca7b510'>https://github.com/JetBrains/kotlin/commit/9091ca7b510</a>
-</li>
-
-</ul>
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#11 IllegalStateException through `PositioningStrategies$SECONDARY_CONSTRUCTOR_DELEGATION_CALL$1.mark` caused by inner enum  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-45339">https://youtrack.jetbrains.com/issue/KT-45339</a>
-<br>
-<b>Date found</b>:
-2021-03-07
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-03-24
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-interface Foo<T> {
-    inner enum class Bar : Foo<T>
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class
-<br>
-<b>Fix Commit(s)</b>:
-<ul>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/ae4dd80254f'>https://github.com/JetBrains/kotlin/commit/ae4dd80254f</a>
-</li>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/8068a5439fe'>https://github.com/JetBrains/kotlin/commit/8068a5439fe</a>
-</li>
-
-</ul>
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#12 JVM / IR: "AssertionError: Primitive array expected: CLASS IR_EXTERNAL_DECLARATION_STUB CLASS"  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-48671">https://youtrack.jetbrains.com/issue/KT-48671</a>
-<br>
-<b>Date found</b>:
-2021-09-08
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-09-11
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-val x: Any = arrayOf<Any>(emptyArray<Int>(), intArrayOf(9, 19, -3))
-class A
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Array, Subtyping
-<br>
-<b>Fix Commit(s)</b>:
-<ul>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/23420ecf7a6'>https://github.com/JetBrains/kotlin/commit/23420ecf7a6</a>
-</li>
-
-</ul>
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#13 SAM conversions by expected type 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-48840">https://youtrack.jetbrains.com/issue/KT-48840</a>
-<br>
-<b>Date found</b>:
-2021-09-21
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Duplicate
-<br>
-<b>Resolution date</b>:
-2022-01-26
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-fun interface FI {
-  fun foo(p: Double): Long
-}
-fun bar(fi: FI) {}
-class A {
-    fun buz(p: Double): Long {
-        return p.toLong()
-    }
-}
-fun foo() {
-    bar({p: Double -> p.toLong()}) // works
-    val v1: FI = FI {p: Double -> p.toLong()} // works
-    val a: A = A()
-    bar(a::buz) // Works
-    val v2: FI = FI a::buz // Fails -- wrong syntax?
-    val v3: FI = a::buz // Fails
-    val v4: FI = a::buz as FI // Work-around
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-SAM type, Lambda, Function reference, Function type
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#14 TYPE_MISMATCH error when applying `fun interface` in the initialization of a type constructor 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-48858">https://youtrack.jetbrains.com/issue/KT-48858</a>
-<br>
-<b>Date found</b>:
-2021-09-22
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Duplicate
-<br>
-<b>Resolution date</b>:
-2022-01-25
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-fun interface FI {
-  fun foo(p: Double): Long
-}
-class A(val x: FI)
-class B<T>(val x: T)
-fun foo() {
-    val x = {p: Double -> p.toLong()}
-    val a1 = A({p: Double -> p.toLong()})
-    val a2 = A(x)
-    val b1 = B<FI>({p: Double -> p.toLong()}) // [TYPE_MISMATCH] Type mismatch.
-    val b2 = B<FI>(x) // [TYPE_MISMATCH] Type mismatch.
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-SAM type, Parameterized class, Lambda
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#15 JVM IR: "AnalyzerException: Argument 1: expected I, but found R" when assigning an array of numbers to an Any variable 
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-48766">https://youtrack.jetbrains.com/issue/KT-48766</a>
-<br>
-<b>Date found</b>:
-2021-09-15
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Obsolete
-<br>
-<b>Resolution date</b>:
-2021-09-15
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-val x: Any = arrayOf<Number>(-74, -43)
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Subtyping, Array
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#16 JVM IR: "AnalyzerException: Argument 1: expected I, but found R" on compiling a method with a generic default argument whose bound is a primitive  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-47073">https://youtrack.jetbrains.com/issue/KT-47073</a>
-<br>
-<b>Date found</b>:
-2021-06-01
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-06-04
-<br>
-<b>Symptom</b>:
-Crash
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-class Test<T: Char> {
-  fun foo(): String {
-    fun nested(x: T = TODO()): String {
-      return "str"
-    }
-    return nested()
-  }
-}
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter
-<br>
-<b>Fix Commit(s)</b>:
-<ul>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/7fd033adaea'>https://github.com/JetBrains/kotlin/commit/7fd033adaea</a>
-</li>
-
-</ul>
-
-<br>
-<br>
-</details>
-</li>
-<li>
-<b>
-#17 JVM IR: ACCIDENTAL_OVERRIDE when overriding a generic field where the type parameter has a primitive bound  -- Fixed
-</b>
-
-<details>
-<br>
-<b>Link</b>:
-<a href="https://youtrack.jetbrains.com/issue/KT-44627">https://youtrack.jetbrains.com/issue/KT-44627</a>
-<br>
-<b>Date found</b>:
-2021-01-30
-<br>
-<b>Status</b>:
-Closed
-<br>
-<b>Resolution</b>:
-Fixed
-<br>
-<b>Resolution date</b>:
-2021-02-15
-<br>
-<b>Symptom</b>:
-Unexpected compile-time error
-<br>
-<b>Test case</b>:
-<pre>
-<xmp>
-open class A<T: Char>(open var x: T)
-open class B<T: Char>(open override var x: T): A<T>(x)
-class C(override var x: Char): B<Char>('x')
-</xmp>
-</pre>
-<b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Overriding, Bounded type parameter
-<br>
-<b>Fix Commit(s)</b>:
-<ul>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/e1a75f82031'>https://github.com/JetBrains/kotlin/commit/e1a75f82031</a>
-</li>
-<li>
-<a href='https://github.com/JetBrains/kotlin/commit/b262d09a81b'>https://github.com/JetBrains/kotlin/commit/b262d09a81b</a>
-</li>
-
-</ul>
-
-<br>
-<br>
-</details>
-</li>
-</ul>
-
 <h3>Groovy</h3>
 
 <ul>
 <li>
 <b>
-#18 NullPointerException in instruction selection phase when having conditionals with lambdas and function references  -- Fixed
+#1 STC chooses to call a non-polymorphic method although explicit type arguments are given 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11129">https://issues.apache.org/jira/browse/GROOVY-11129</a>
+<br>
+<b>Date found</b>:
+2023-07-19
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Duplicate
+<br>
+<b>Resolution date</b>:
+2023-07-20
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.concurrent.*;
+class Main {
+  static final void test() {
+    ExecutorService z = null;
+    Future<CharSequence> future = z.<CharSequence>submit(() -> "fd");
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Overloading, Lambda, Parameterized function, Single Abstract Method (SAM)
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#2 unexpected error when having overloaded methods, one of which receiving an Iterable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11121">https://issues.apache.org/jira/browse/GROOVY-11121</a>
+<br>
+<b>Date found</b>:
+2023-07-09
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.*;
+class Foo<T> {
+  static <T> Foo<T> of(Iterable<T> values) { return null; }
+  static <T> Foo<T> of(T values) { return null; }
+}
+class Main {
+  static final void test() {
+    Foo.<IntUnaryOperator>of((int s) -> s + 1);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Parameterized function, Overloading, Single Abstract Method (SAM), Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#3 Unexpected error when using static method of class with lower case 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11120">https://issues.apache.org/jira/browse/GROOVY-11120</a>
+<br>
+<b>Date found</b>:
+2023-07-09
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Won't Fix
+<br>
+<b>Resolution date</b>:
+2023-07-10
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+package bar;
+public class foo {
+  public static void create(String x) {}
+}
+// client code
+class Main {
+  static final void test() {
+    bar.foo.create("fda");
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Static method
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#4 Fail to find method reference in case of chain of polymorphic method calls 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11114">https://issues.apache.org/jira/browse/GROOVY-11114</a>
+<br>
+<b>Date found</b>:
+2023-06-27
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.*;
+import java.util.concurrent.*;
+class Foo<K, V> {
+  V apply(K p) { return null; }
+}
+class Main {
+  static final void test(Foo<Map.Entry<Number, Boolean>, String> p) {
+    ConcurrentHashMap.KeySetView<Number, Boolean> x = null;
+    ConcurrentHashMap<Number, Boolean> y = x.getMap();
+    y.<String>reduceEntries(19, p::apply, null); // works
+    x.getMap().<String>reduceEntries(19, p::apply, null); // fails
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Function reference, Parameterized class, Parameterized type, Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#5 STC mixes names of bounded type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11110">https://issues.apache.org/jira/browse/GROOVY-11110</a>
+<br>
+<b>Date found</b>:
+2023-06-22
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.stream.*;
+class Main {
+  static final <T extends Number>void test() {
+    java.util.function.BiConsumer<T, T> func = null;
+    Stream<String> stream = null;
+    T res = stream.<T>collect(() -> (T) null, (T finisher, String hijacking) -> { }, func);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Bounded type parameter, Parameterized function, Parameterized type, Parameterized class, Wildcard type, Single Abstract Method (SAM)
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#6 Unable to initialize generic class with an array 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11109">https://issues.apache.org/jira/browse/GROOVY-11109</a>
+<br>
+<b>Date found</b>:
+2023-06-22
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T> {
+  Foo(T[] x) {}
+}
+class Main {
+  static final void test() {
+    Byte[][] arg = null;
+    Foo<Byte[]> res = new Foo<Byte[]>(arg)
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Array type, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#7 SAM types not working well along with overloading 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11094">https://issues.apache.org/jira/browse/GROOVY-11094</a>
+<br>
+<b>Date found</b>:
+2023-06-13
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.*;
+import java.util.function.*;
+class Bar {
+  LinkedList<String> collect(Supplier<String> function) { }
+        List<String> collect(String x, int y, int z) { }
+}
+class Main {
+  static final void test() {
+    Bar x = null;
+    LinkedList<String> d = x.collect(() -> "fda");
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Single Abstract Method (SAM)
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#8 Wrong method is chosen when having overloaded methods with bounded type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11086">https://issues.apache.org/jira/browse/GROOVY-11086</a>
+<br>
+<b>Date found</b>:
+2023-06-08
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.*;
+class Foo<T> {}
+class Bar<T> {}
+class Main {
+  static final void test() {
+    LinkedList<Number> x = null;
+    Foo<Iterable<Number>> y = Main.<Number, Iterable<Number>>m(x);
+  }
+  static <X, T extends Iterable<X>> Foo<T> m(Iterable<X> x) {return null;}
+  static <X, T extends List<X>> Bar<T> m(List<X> x) { return null; }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Parameterized function, Bounded type parameter, Subtyping, Inheritance / Implementation of multiple interfaces, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#9 STC overconstraints lambda's parameter types when expecting a SAM that involves wildcards 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11077">https://issues.apache.org/jira/browse/GROOVY-11077</a>
+<br>
+<b>Date found</b>:
+2023-06-02
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test {
+  void test() {
+    m((Integer x, Integer y) -> 1);
+  }
+  void m(java.util.Comparator<? extends Object> x) {}
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Lambda, Wildcard type, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#10 Unable to call parameterized function that contains type variables with recursive bounds 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11066">https://issues.apache.org/jira/browse/GROOVY-11066</a>
+<br>
+<b>Date found</b>:
+2023-05-18
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Main {
+  static final void test() {
+    String arg1 = null;
+    Number arg2 = null;
+    com.google.common.collect.ImmutableSortedMap.<String, Number>of(arg1, arg2);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Bounded type parameter, Recursive upper bound, Wildcard type, Parameterized function, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#11 Method ambiguity error when having methods with primitive arrays and varargs  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11053">https://issues.apache.org/jira/browse/GROOVY-11053</a>
+<br>
+<b>Date found</b>:
+2023-05-11
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2023-05-29
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Main {
+  static final void test() {
+    final byte[] vetting = new byte[1];
+    final byte[] grafting = org.apache.commons.lang3.ArrayUtils.removeAll(vetting); // works 
+    final byte[] grafting = org.apache.commons.lang3.ArrayUtils.removeAll(vetting, 0); // fails 
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Variable argument, Array type, Primitive type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#12 Better diagnostic message instead of stacktrace? 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11046">https://issues.apache.org/jira/browse/GROOVY-11046</a>
+<br>
+<b>Date found</b>:
+2023-05-05
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test {
+    void test() {
+        org.apache.logging.log4j.core.async.AsyncLogger d = null;
+    }
+}
+</xmp>
+</pre>
+
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#13 Wrong method is chosen from the Groovy runtime 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11042">https://issues.apache.org/jira/browse/GROOVY-11042</a>
+<br>
+<b>Date found</b>:
+2023-05-02
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Main {
+  static final void test() {
+    String[] p1 = new String[]{"v2"};
+    String[] p2 = new String[]{"v1"};
+    java.util.TreeMap<String[], Number> x = null;
+    x.subMap(p1, p2);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Array type, Parameterized function, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#14 Inferred type is Object when having a complex inheritance chain of interfaces 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11035">https://issues.apache.org/jira/browse/GROOVY-11035</a>
+<br>
+<b>Date found</b>:
+2023-04-28
+<br>
+<b>Status</b>:
+Resolved
+<br>
+<b>Resolution</b>:
+Duplicate
+<br>
+<b>Resolution date</b>:
+2023-04-30
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+@Grab('org.apache.commons:commons-collections4:4.4')
+import org.apache.commons.collections4.iterators.*;
+class Main {
+  @groovy.transform.TypeChecked test() {
+    EmptyListIterator<Number> tmp = null
+    Number x = tmp.next()
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized type, Parameterized class, Bridge method
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#15 Conficts between type parameter names result in unexpected type error 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11025">https://issues.apache.org/jira/browse/GROOVY-11025</a>
+<br>
+<b>Date found</b>:
+2023-04-26
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.Map;
+import java.util.List;
+class Main {
+  static <K, V> void m(Map<K, V> map, K key, V value) {}
+  static final <K>void test() {
+    Map<List<K>, K> map = null;
+    List<K> key = null;
+    K value = null;
+    Main.m(map, key, value);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized type, Parameterized class, Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#16 StackOverflowError when having parameterized function with recursive bounds 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11022">https://issues.apache.org/jira/browse/GROOVY-11022</a>
+<br>
+<b>Date found</b>:
+2023-04-24
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test<K, V> {
+    public static <K extends Comparable<? super K>, V> Test<K, V> m(K k1, V v1) {
+        return new Test<K, V>()
+    }
+}
+class Main {
+    @groovy.transform.TypeChecked test() {
+        Test.<Object, Integer>m(null, 1)
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Wildcard type, Parameterized function, Parameterized type, Parameterized class, Recursive upper bound, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#17 Resolving wrong overloaded method when having variable arguments 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11021">https://issues.apache.org/jira/browse/GROOVY-11021</a>
+<br>
+<b>Date found</b>:
+2023-04-22
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.Comparator;
+class Foo<T> {}
+class Bar<T> {
+  static <T> Bar<T> concat(Bar<? extends T>... x)  { return null; }
+  static <T> Bar<T> concat(Bar<? extends Bar<? extends T>> x)  { return null; }
+  void toSortedSet(Comparator<? super T> x) {}
+}
+class Main {
+  static final void test() {
+    Bar<Foo<Number>> x = null;
+    Comparator<Foo<Number>> y = null;
+    Bar.concat(x).toSortedSet(y);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Parameterized function, Variable argument, Subtyping, Inheritance / Implementation of multiple interfaces, Wildcard type, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#18 Fail to substitute type when having SAM type with generics  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11013">https://issues.apache.org/jira/browse/GROOVY-11013</a>
+<br>
+<b>Date found</b>:
+2023-04-14
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2023-05-26
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.*;
+@FunctionalInterface
+interface Foo<T> {
+  int m(List<T> x);
+}
+class Main {
+  static final void test() {
+    Foo<String> p = (List<String> x) -> 1;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Lambda, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#19 Wrong type is inferred when calling method defined in the parent class  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11012">https://issues.apache.org/jira/browse/GROOVY-11012</a>
+<br>
+<b>Date found</b>:
+2023-04-13
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2023-04-30
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+interface Bar<V> {
+  default V get(Object x, Object y) { return null; }
+}
+class Foo<V> implements Bar<V> {
+  static <V> Foo<V> create() { return null; }
+}
+class Main {
+  static final void test() {
+    Number x = Foo.<Number>create().get(null, null);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Default method, Parameterized function, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#20 STC resolves wrong method reference  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11009">https://issues.apache.org/jira/browse/GROOVY-11009</a>
+<br>
+<b>Date found</b>:
+2023-04-11
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2023-04-18
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.*;
+class Main {
+  static final void test() {
+    final Function<Double, Double> x = Main::clone;
+  }
+  public static <T> T clone(T x) { return x; }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function reference, Single Abstract Method (SAM), Parameterized type, Parameterized class, Static method
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#21 Unexpected type mismatch when having overloaded methods with variable arguments 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-11002">https://issues.apache.org/jira/browse/GROOVY-11002</a>
+<br>
+<b>Date found</b>:
+2023-04-07
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+class Main {
+  static final void test() {
+    Main.<String>m(() -> "df", "fdaf");
+  }
+  static <T> void m(Supplier<T> x, T... y) {}
+  static <T extends Comparable<? extends T>> void m(T...y) {}
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Variable argument, Single Abstract Method (SAM), Parameterized type, Parameterized class, Parameterized function, Lambda, Recursive upper bound, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#22 Unexpected type mismatch when having bounded type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10999">https://issues.apache.org/jira/browse/GROOVY-10999</a>
+<br>
+<b>Date found</b>:
+2023-04-04
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Main {
+  static final <U extends Number, H extends U> void test() {
+    def x = java.util.Collections.<H, H>emptyNavigableMap().ceilingKey((H) null);
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Bounded type parameter, Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#23 Fail to resolve method reference with generics  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10994">https://issues.apache.org/jira/browse/GROOVY-10994</a>
+<br>
+<b>Date found</b>:
+2023-03-28
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2023-04-11
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.List;
+import java.util.function.Predicate;
+class Main {
+  static final <T> void test() {
+    List<T> x = null;
+    Predicate<? super T> y = x::add;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function reference, Wildcard type, Single Abstract Method (SAM), Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#24 Unexpected parser error when having fully qualified classes and constructor references 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10984">https://issues.apache.org/jira/browse/GROOVY-10984</a>
+<br>
+<b>Date found</b>:
+2023-03-27
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+import java.util.PriorityQueue;
+class Main {
+  static final void test() {
+    java.util.function.Supplier<java.util.PriorityQueue<Number>> x = java.util.PriorityQueue<Number>::new; // parsing error
+    Supplier<PriorityQueue<Number>> y = PriorityQueue<Number>::new; // no error
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function reference, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#25 Cannot provide method reference to a type parameter instantiated with a SAM type 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10979">https://issues.apache.org/jira/browse/GROOVY-10979</a>
+<br>
+<b>Date found</b>:
+2023-03-21
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.*;
+import java.util.stream.*;
+public class Test {
+    public static void test() {
+      Stream<Number> x = null;
+      BiFunction<Function<String, Integer>, Number, Function<String, Integer>> y = null;
+      BinaryOperator<Function<String, Integer>> z = null;
+      x.<Function<String, Integer>>reduce(Test::m, y, z);  // fails
+      x.reduce(Test::m, y, z);   // fails
+      x.reduce((d) -> 1, y, z);   // works
+    }
+    public static Integer m(String x) { return 1; }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Function reference, Parameterized type, Parameterized function, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#26 Fail to perform SAM conversion using method references  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10974">https://issues.apache.org/jira/browse/GROOVY-10974</a>
+<br>
+<b>Date found</b>:
+2023-03-14
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2023-08-31
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.*;
+import java.util.stream.*;
+import java.util.function.*;
+class Main {
+  static final void test(DoubleStream x, ObjDoubleConsumer<Boolean> y,
+                         BiConsumer<Boolean, Boolean> z) {
+        Spliterator.OfDouble d = null;
+        StreamSupport.doubleStream(d, x.collect(
+            () -> true, y::accept, z::accept));
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function reference, Single Abstract Method (SAM), Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#27 STC is looking for the wrong constructor reference  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10971">https://issues.apache.org/jira/browse/GROOVY-10971</a>
+<br>
+<b>Date found</b>:
+2023-03-09
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2023-04-12
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo {
+  Foo(String d) {}
+}
+class Main {
+  static final void test() {
+        def x = java.util.stream.Collectors.groupingBy(Main::m) // works;
+        def y = java.util.stream.Collectors.groupingBy(Foo::new) // fails;
+  }
+  static Foo m(String x) { return null; }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function reference, Single Abstract Method (SAM), Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#28 STC rejects program when having SAM types and conditionals 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10961">https://issues.apache.org/jira/browse/GROOVY-10961</a>
+<br>
+<b>Date found</b>:
+2023-03-06
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.*;
+import java.util.Deque;
+class Main {
+  static final void test(Deque<Integer> p1, Supplier<Integer> p2) {
+    Supplier<Integer> x = (true) ? p1::peek : p2;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Conditionals, Single Abstract Method (SAM), Parameterized type, Parameterized class, Function reference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#29 Initialization of non-static inner class fails 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10956">https://issues.apache.org/jira/browse/GROOVY-10956</a>
+<br>
+<b>Date found</b>:
+2023-03-01
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo {
+    public class Bar {
+        Bar() {}
+    }
+}
+public class Test {
+    void test() {
+        Foo.Bar x = new Foo().new Bar(); // works
+        Foo y = new Foo();
+        Foo.Bar z = y.new Bar(); // doesn't work
+    }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Inner class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#30 Method ambiguity error even if the given argument has an explicit type 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10914">https://issues.apache.org/jira/browse/GROOVY-10914</a>
+<br>
+<b>Date found</b>:
+2023-01-24
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Information Provided
+<br>
+<b>Resolution date</b>:
+2023-02-04
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.*;
+class Main {
+  static final void test() {
+    String str = "foo"
+    LongConsumer y = str.chars().asLongStream().summaryStatistics();
+    str.chars().asLongStream().summaryStatistics().andThen(y); // Does not work
+    str.chars().asLongStream().summaryStatistics().andThen((LongConsumer) y); // it works
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Subtyping, Inheritance / Implementation of multiple interfaces
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#31 Inconsistency in the treatment of primitives values when passed as call arguments 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10912">https://issues.apache.org/jira/browse/GROOVY-10912</a>
+<br>
+<b>Date found</b>:
+2023-01-21
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test {
+    void test() {
+      char c = 'c' // works
+      double e = 10.0; // works
+      Character v = Character.valueOf('c'); // 'c' is treated as String
+      Double d = Double.valueOf(10.0);  // 10.0 is treated as BigDecimal
+    }
+}
+</xmp>
+</pre>
+
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#32 Unable to resolve field from a bounded type parameter  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://issues.apache.org/jira/browse/GROOVY-10846">https://issues.apache.org/jira/browse/GROOVY-10846</a>
+<br>
+<b>Date found</b>:
+2022-11-18
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2022-11-18
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Supplier;
+class A {
+  public String x;
+}
+public class B<T extends A, X extends Supplier<T>> {
+  void test(T p) {
+    p.x = "str";
+  } 
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Parameterized type, Parameterized class, Parameterized function, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#33 NullPointerException in instruction selection phase when having conditionals with lambdas and function references  -- Fixed
 </b>
 
 <details>
@@ -835,7 +1454,7 @@ class Test {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Conditionals, Function reference, SAM type, Parameterized function
+Conditionals, Function reference, Single Abstract Method (SAM), Parameterized function
 
 <br>
 <br>
@@ -843,7 +1462,7 @@ Conditionals, Function reference, SAM type, Parameterized function
 </li>
 <li>
 <b>
-#19 LUB does not work properly when mixing type parameter names and using wildcards  -- Fixed
+#34 LUB does not work properly when mixing type parameter names and using wildcards  -- Fixed
 </b>
 
 <details>
@@ -888,7 +1507,7 @@ Parameterized class, Parameterized type, Conditionals, Use-site variance
 </li>
 <li>
 <b>
-#20 Cannot resolve type in the presence of use-site contravariance 
+#35 Cannot resolve type in the presence of use-site contravariance 
 </b>
 
 <details>
@@ -931,7 +1550,7 @@ Parameterized class, Parameterized type, Use-site variance
 </li>
 <li>
 <b>
-#21 Unable to infer type parameter of recursive method 
+#36 Unable to infer type parameter of recursive method 
 </b>
 
 <details>
@@ -974,7 +1593,7 @@ Parameterized class, Parameterized type, Parameterized function, Bounded type pa
 </li>
 <li>
 <b>
-#22 Unable to instantiate type parameter of method with a valid type 
+#37 Unable to instantiate type parameter of method with a valid type 
 </b>
 
 <details>
@@ -1014,7 +1633,7 @@ Parameterized class, Parameterized function, Parameterized type, Use-site varian
 </li>
 <li>
 <b>
-#23 Subtyping does not work properly when having bounded type parameter and closure 
+#38 Subtyping does not work properly when having bounded type parameter and closure 
 </b>
 
 <details>
@@ -1053,7 +1672,7 @@ Lambda, Bounded type parameter, Parameterized class
 </li>
 <li>
 <b>
-#24 Subtyping does not work properly when having two bounded type parameters 
+#39 Subtyping does not work properly when having two bounded type parameters 
 </b>
 
 <details>
@@ -1095,7 +1714,7 @@ Bounded type parameter, Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#25 Wrong type is inferred when involving a bounded type parameter in a parameterized method call  -- Fixed
+#40 Wrong type is inferred when involving a bounded type parameter in a parameterized method call  -- Fixed
 </b>
 
 <details>
@@ -1153,7 +1772,7 @@ Parameterized class, Parameterized function, Parameterized type, Primitive type
 </li>
 <li>
 <b>
-#26 LUB operation returns incorrect result  -- Fixed
+#41 LUB operation returns incorrect result  -- Fixed
 </b>
 
 <details>
@@ -1192,7 +1811,7 @@ class Test {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Inheritance, Conditionals, Subtyping
+Inheritance / Implementation of multiple interfaces, Conditionals, Subtyping
 
 <br>
 <br>
@@ -1200,7 +1819,7 @@ Inheritance, Conditionals, Subtyping
 </li>
 <li>
 <b>
-#27 Compiler crash in class generation when combining lambdas and default args 
+#42 Compiler crash in class generation when combining lambdas and default args 
 </b>
 
 <details>
@@ -1231,7 +1850,7 @@ class Test {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Lambda, SAM type, Named arguments
+Lambda, Single Abstract Method (SAM), Named arguments
 
 <br>
 <br>
@@ -1239,7 +1858,7 @@ Lambda, SAM type, Named arguments
 </li>
 <li>
 <b>
-#28 Incompatible generic argument type when combining conditionals and bounded type parameters  -- Fixed
+#43 Incompatible generic argument type when combining conditionals and bounded type parameters  -- Fixed
 </b>
 
 <details>
@@ -1284,7 +1903,7 @@ Conditionals, Bounded type parameter, Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#29 Incorrect inference of type argument of parameterized method call  -- Fixed
+#44 Incorrect inference of type argument of parameterized method call  -- Fixed
 </b>
 
 <details>
@@ -1332,7 +1951,7 @@ Parameterized function, Parameterized class
 </li>
 <li>
 <b>
-#30 STC cannot compile program with multiple bounded type parameters  -- Fixed
+#45 STC cannot compile program with multiple bounded type parameters  -- Fixed
 </b>
 
 <details>
@@ -1383,7 +2002,7 @@ Parameterized class, Parameterized type, Use-site variance, Bounded type paramet
 </li>
 <li>
 <b>
-#31 STC does not perform boxing when overriding method using a parameterized class with bounded type parameters  -- Fixed
+#46 STC does not perform boxing when overriding method using a parameterized class with bounded type parameters  -- Fixed
 </b>
 
 <details>
@@ -1426,7 +2045,7 @@ class B<T extends I> {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Use-site variance, Bounded type parameter, Primitive type, Overriding
+Parameterized class, Parameterized type, Inheritance / Implementation of multiple interfaces, Use-site variance, Bounded type parameter, Primitive type, Overriding
 
 <br>
 <br>
@@ -1434,7 +2053,7 @@ Parameterized class, Parameterized type, Inheritance, Use-site variance, Bounded
 </li>
 <li>
 <b>
-#32 STC does not type check method call when using bounded type parameter as a type argument  -- Fixed
+#47 STC does not type check method call when using bounded type parameter as a type argument  -- Fixed
 </b>
 
 <details>
@@ -1481,7 +2100,7 @@ Parameterized class, Parameterized type, Bounded type parameter
 </li>
 <li>
 <b>
-#33 STC produces compile-time error on encoutering bounded type parameter with conditional  -- Fixed
+#48 STC produces compile-time error on encoutering bounded type parameter with conditional  -- Fixed
 </b>
 
 <details>
@@ -1525,7 +2144,7 @@ Parameterized type, Use-site variance, Parameterized function, Bounded type para
 </li>
 <li>
 <b>
-#34 STC reports an unexpected method ambiguity 
+#49 STC reports an unexpected method ambiguity 
 </b>
 
 <details>
@@ -1571,7 +2190,7 @@ public class Test {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Bounded type parameter, Inheritance, Overriding, Subtyping, Parameterized type
+Parameterized class, Bounded type parameter, Inheritance / Implementation of multiple interfaces, Overriding, Subtyping, Parameterized type
 
 <br>
 <br>
@@ -1579,7 +2198,7 @@ Parameterized class, Bounded type parameter, Inheritance, Overriding, Subtyping,
 </li>
 <li>
 <b>
-#35 Unable to resolve method after LUB operator  -- Fixed
+#50 Unable to resolve method after LUB operator  -- Fixed
 </b>
 
 <details>
@@ -1630,7 +2249,7 @@ class Test {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Overriding, Inheritance, Parameterized class, Parameterized type, Primitive type, Conditionals
+Overriding, Inheritance / Implementation of multiple interfaces, Parameterized class, Parameterized type, Primitive type, Conditionals
 
 <br>
 <br>
@@ -1638,7 +2257,7 @@ Overriding, Inheritance, Parameterized class, Parameterized type, Primitive type
 </li>
 <li>
 <b>
-#36 STC crashes on compiling an abstract method with default arguments and lambda  -- Fixed
+#51 STC crashes on compiling an abstract method with default arguments and lambda  -- Fixed
 </b>
 
 <details>
@@ -1679,7 +2298,7 @@ Lambda, Function type, Conditionals
 </li>
 <li>
 <b>
-#37 STC rejects program on compiling constructor initialization with a wildcard type  -- Fixed
+#52 STC rejects program on compiling constructor initialization with a wildcard type  -- Fixed
 </b>
 
 <details>
@@ -1724,7 +2343,7 @@ Parameterized class, Parameterized type, Use-site variance
 </li>
 <li>
 <b>
-#38 STC crashes when passing method reference to an inner closure  -- Fixed
+#53 STC crashes when passing method reference to an inner closure  -- Fixed
 </b>
 
 <details>
@@ -1777,7 +2396,7 @@ Function type, Function reference, Lambda
 </li>
 <li>
 <b>
-#39 STC instantiates type variable with a wrong type when calling an instance method of the same class  -- Fixed
+#54 STC instantiates type variable with a wrong type when calling an instance method of the same class  -- Fixed
 </b>
 
 <details>
@@ -1821,7 +2440,7 @@ Conditionals, Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#40 Compiler crash when combining closure with function reference  -- Fixed
+#55 Compiler crash when combining closure with function reference  -- Fixed
 </b>
 
 <details>
@@ -1870,7 +2489,7 @@ Parameterized class, Lambda, Function reference, Function type
 </li>
 <li>
 <b>
-#41 Compiler crashes on parameterized function with duplicate type variables  -- Fixed
+#56 Compiler crashes on parameterized function with duplicate type variables  -- Fixed
 </b>
 
 <details>
@@ -1916,7 +2535,7 @@ Parameterized class, Parameterized type, Parameterized function
 </li>
 <li>
 <b>
-#42 Type variable of function does not shadow the corresponding type variable of class  -- Fixed
+#57 Type variable of function does not shadow the corresponding type variable of class  -- Fixed
 </b>
 
 <details>
@@ -1962,7 +2581,7 @@ Parameterized class, Parameterized type, Parameterized function, Type argument i
 </li>
 <li>
 <b>
-#43 Type variable substitution does not work properly on parameterized function's return type  -- Fixed
+#58 Type variable substitution does not work properly on parameterized function's return type  -- Fixed
 </b>
 
 <details>
@@ -2010,7 +2629,7 @@ Parameterized class, Parameterized type, Parameterized function
 </li>
 <li>
 <b>
-#44 Unable to infer type variable of parameterized function that expects two parameters  -- Fixed
+#59 Unable to infer type variable of parameterized function that expects two parameters  -- Fixed
 </b>
 
 <details>
@@ -2063,7 +2682,7 @@ Parameterized class, Parameterized type, Parameterized function
 </li>
 <li>
 <b>
-#45 Improper type variable substitution when involving type parameters with conficting names  -- Fixed
+#60 Improper type variable substitution when involving type parameters with conficting names  -- Fixed
 </b>
 
 <details>
@@ -2113,7 +2732,7 @@ Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#46 STC rejects program when assigning a closure that returns a class field  -- Fixed
+#61 STC rejects program when assigning a closure that returns a class field  -- Fixed
 </b>
 
 <details>
@@ -2157,7 +2776,7 @@ Lambda, Function type, Subtyping, Primitive type
 </li>
 <li>
 <b>
-#47 Cannot assign type parameter whose bound is a parameterized type that takes a wildcard  -- Fixed
+#62 Cannot assign type parameter whose bound is a parameterized type that takes a wildcard  -- Fixed
 </b>
 
 <details>
@@ -2202,7 +2821,7 @@ Parameterized class, Parameterized type, Use-site variance, Bounded type paramet
 </li>
 <li>
 <b>
-#48 Type variable substitution does not work well when running into chain of field accesses  -- Fixed
+#63 Type variable substitution does not work well when running into chain of field accesses  -- Fixed
 </b>
 
 <details>
@@ -2264,7 +2883,7 @@ Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#49 Wrong inference when using ternary operator with lambdas  -- Fixed
+#64 Wrong inference when using ternary operator with lambdas  -- Fixed
 </b>
 
 <details>
@@ -2316,7 +2935,7 @@ Function type, Conditionals, Lambda
 </li>
 <li>
 <b>
-#50 Wrong inference when using ternary operator with closure and variable  -- Fixed
+#65 Wrong inference when using ternary operator with closure and variable  -- Fixed
 </b>
 
 <details>
@@ -2362,7 +2981,7 @@ Lambda, Function type, Conditionals
 </li>
 <li>
 <b>
-#51 Cannot initialize parameterized class with lambda without cast 
+#66 Cannot initialize parameterized class with lambda without cast 
 </b>
 
 <details>
@@ -2418,7 +3037,7 @@ Function type, Lambda, Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#52 Unable to assign variable in parameterized class with bounded polymorphism  
+#67 Unable to assign variable in parameterized class with bounded polymorphism  
 </b>
 
 <details>
@@ -2462,7 +3081,7 @@ Parameterized class, Bounded type parameter
 </li>
 <li>
 <b>
-#53 STC reports wrong message when encoutering wildcard types  -- Fixed
+#68 STC reports wrong message when encoutering wildcard types  -- Fixed
 </b>
 
 <details>
@@ -2507,7 +3126,7 @@ Parameterized class, Parameterized type, Use-site variance
 </li>
 <li>
 <b>
-#54 STC: cannot return closure from method without casting  -- Fixed
+#69 STC: cannot return closure from method without casting  -- Fixed
 </b>
 
 <details>
@@ -2568,7 +3187,7 @@ Function type, Lambda
 </li>
 <li>
 <b>
-#55 Unexpected generics parameter arity mismatch in the "instruction selection" phase  -- Fixed
+#70 Unexpected generics parameter arity mismatch in the "instruction selection" phase  -- Fixed
 </b>
 
 <details>
@@ -2609,7 +3228,7 @@ class B extends A {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized function, Parameterized class, Parameterized type, Bounded type parameter, Inheritance, Overriding, Conditionals
+Parameterized function, Parameterized class, Parameterized type, Bounded type parameter, Inheritance / Implementation of multiple interfaces, Overriding, Conditionals
 
 <br>
 <br>
@@ -2617,7 +3236,7 @@ Parameterized function, Parameterized class, Parameterized type, Bounded type pa
 </li>
 <li>
 <b>
-#56 STC computes an imprecise LUB when involving two parameterized types implementing the same interface  -- Fixed
+#71 STC computes an imprecise LUB when involving two parameterized types implementing the same interface  -- Fixed
 </b>
 
 <details>
@@ -2658,7 +3277,7 @@ class Main {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Subtyping, Conditionals
+Parameterized class, Parameterized type, Inheritance / Implementation of multiple interfaces, Subtyping, Conditionals
 
 <br>
 <br>
@@ -2666,7 +3285,7 @@ Parameterized class, Parameterized type, Inheritance, Subtyping, Conditionals
 </li>
 <li>
 <b>
-#57 LUB is computed incorrectly when involving bounded type variables  -- Fixed
+#72 LUB is computed incorrectly when involving bounded type variables  -- Fixed
 </b>
 
 <details>
@@ -2709,7 +3328,7 @@ Parameterized class, Parameterized function, Bounded type parameter, Parameteriz
 </li>
 <li>
 <b>
-#58 Unexpected NullPointerException during the "instruction selection" phase  -- Fixed
+#73 Unexpected NullPointerException during the "instruction selection" phase  -- Fixed
 </b>
 
 <details>
@@ -2769,7 +3388,7 @@ Parameterized class, Parameterized type, Parameterized function, Bounded type pa
 </li>
 <li>
 <b>
-#59 Unable to infer the type parameter of a parameterized function  -- Fixed
+#74 Unable to infer the type parameter of a parameterized function  -- Fixed
 </b>
 
 <details>
@@ -2824,7 +3443,7 @@ Parameterized function, Parameterized class
 </li>
 <li>
 <b>
-#60 Unexpected type mismatch when having conflicting type parameter names  -- Fixed
+#75 Unexpected type mismatch when having conflicting type parameter names  -- Fixed
 </b>
 
 <details>
@@ -2876,7 +3495,7 @@ Parameterized class, Bounded type parameter, Use-site variance, Parameterized ty
 </li>
 <li>
 <b>
-#61 Unexpected type mismatch when combining conditional and bounded type parameter  -- Fixed
+#76 Unexpected type mismatch when combining conditional and bounded type parameter  -- Fixed
 </b>
 
 <details>
@@ -2921,7 +3540,7 @@ Parameterized class, Parameterized type, Bounded type parameter, Conditionals
 </li>
 <li>
 <b>
-#62 STC: cannot combine use-variance with bounded polymorphism  -- Fixed
+#77 STC: cannot combine use-variance with bounded polymorphism  -- Fixed
 </b>
 
 <details>
@@ -2961,7 +3580,7 @@ class Foo<T extends A> {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Use-site variance, Bounded type parameter, Inheritance, Subtyping
+Parameterized class, Parameterized type, Use-site variance, Bounded type parameter, Inheritance / Implementation of multiple interfaces, Subtyping
 
 <br>
 <br>
@@ -2969,7 +3588,7 @@ Parameterized class, Parameterized type, Use-site variance, Bounded type paramet
 </li>
 <li>
 <b>
-#63 Flow typing does not work when && is combinded with instanceof  -- Fixed
+#78 Flow typing does not work when && is combinded with instanceof  -- Fixed
 </b>
 
 <details>
@@ -3006,7 +3625,7 @@ class Bar extends Foo {}
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Inheritance, Subtyping, Flow typing, Conditionals, Array
+Inheritance / Implementation of multiple interfaces, Subtyping, Flow typing, Conditionals, Array
 
 <br>
 <br>
@@ -3014,7 +3633,7 @@ Inheritance, Subtyping, Flow typing, Conditionals, Array
 </li>
 <li>
 <b>
-#64 Cannot assign closure with long as return type to java.util.function.Function<X, Number>  -- Fixed
+#79 Cannot assign closure with long as return type to java.util.function.Function<X, Number>  -- Fixed
 </b>
 
 <details>
@@ -3061,7 +3680,7 @@ Function type, Primitive type, Subtyping, Lambda
 </li>
 <li>
 <b>
-#65 FP Cycle detected in type parameter that extends another type parameter  -- Fixed
+#80 FP Cycle detected in type parameter that extends another type parameter  -- Fixed
 </b>
 
 <details>
@@ -3108,7 +3727,7 @@ Parameterized class, Bounded type parameter
 </li>
 <li>
 <b>
-#66 STC: error when passing a type parameter in type constructor  -- Fixed
+#81 STC: error when passing a type parameter in type constructor  -- Fixed
 </b>
 
 <details>
@@ -3155,7 +3774,7 @@ Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#67 STC: compiler error when using type parameter with extends  -- Fixed
+#82 STC: compiler error when using type parameter with extends  -- Fixed
 </b>
 
 <details>
@@ -3199,7 +3818,7 @@ Parameterized class, Bounded type parameter
 </li>
 <li>
 <b>
-#68 StackOverflowError in STC  -- Fixed
+#83 StackOverflowError in STC  -- Fixed
 </b>
 
 <details>
@@ -3246,7 +3865,7 @@ Parameterized class, Bounded type parameter
 </li>
 <li>
 <b>
-#69 compiler crash during canonicalization  -- Fixed
+#84 compiler crash during canonicalization  -- Fixed
 </b>
 
 <details>
@@ -3297,7 +3916,7 @@ Parameterized class, Parameterized type, Bounded type parameter, Subtyping, Arra
 </li>
 <li>
 <b>
-#70 Cannot assign null to a variable with a bounded generic type  -- Fixed
+#85 Cannot assign null to a variable with a bounded generic type  -- Fixed
 </b>
 
 <details>
@@ -3347,7 +3966,7 @@ Parameterized class, Bounded type parameter
 </li>
 <li>
 <b>
-#71 groovyc infers the wrong type when using a method reference of a function with varargs  -- Fixed
+#86 groovyc infers the wrong type when using a method reference of a function with varargs  -- Fixed
 </b>
 
 <details>
@@ -3394,7 +4013,7 @@ public class Main {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Variable arguments, Parameterized function, Bounded type parameter, Function reference, Function type, Array
+Parameterized class, Variable argument, Parameterized function, Bounded type parameter, Function reference, Function type, Array
 
 <br>
 <br>
@@ -3402,7 +4021,7 @@ Parameterized class, Variable arguments, Parameterized function, Bounded type pa
 </li>
 <li>
 <b>
-#72 Unexpected behaviour when the return type of a closure is a type parameter  -- Fixed
+#87 Unexpected behaviour when the return type of a closure is a type parameter  -- Fixed
 </b>
 
 <details>
@@ -3456,7 +4075,7 @@ Parameterized class, Bounded type parameter, Function type, Lambda
 </li>
 <li>
 <b>
-#73 Incompatible generic argument types on closure's return type  -- Fixed
+#88 Incompatible generic argument types on closure's return type  -- Fixed
 </b>
 
 <details>
@@ -3494,7 +4113,7 @@ public class Main {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance, Subtyping, Lambda, Function type
+Parameterized class, Parameterized type, Inheritance / Implementation of multiple interfaces, Subtyping, Lambda, Function type
 <br>
 <b>Fix Commit(s)</b>:
 <ul>
@@ -3510,7 +4129,7 @@ Parameterized class, Parameterized type, Inheritance, Subtyping, Lambda, Functio
 </li>
 <li>
 <b>
-#74 STC does not perform boxing on chars when encountering assignment and function call  -- Fixed
+#89 STC does not perform boxing on chars when encountering assignment and function call  -- Fixed
 </b>
 
 <details>
@@ -3563,7 +4182,7 @@ Primitive type
 </li>
 <li>
 <b>
-#75 Incompatible generic argument types when combining subtyping and closures  -- Fixed
+#90 Incompatible generic argument types when combining subtyping and closures  -- Fixed
 </b>
 
 <details>
@@ -3602,7 +4221,7 @@ class Main {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Inheritance, Subtyping, Lambda, Function type
+Inheritance / Implementation of multiple interfaces, Subtyping, Lambda, Function type
 <br>
 <b>Fix Commit(s)</b>:
 <ul>
@@ -3618,7 +4237,7 @@ Inheritance, Subtyping, Lambda, Function type
 </li>
 <li>
 <b>
-#76 Conversion from int to byte does not work in case of ternary operator 
+#91 Conversion from int to byte does not work in case of ternary operator 
 </b>
 
 <details>
@@ -3668,7 +4287,7 @@ Primitive type, Conditionals
 </li>
 <li>
 <b>
-#77 groovyc does not perform unboxing on Character type  -- Fixed
+#92 groovyc does not perform unboxing on Character type  -- Fixed
 </b>
 
 <details>
@@ -3718,7 +4337,7 @@ Primitive type
 </li>
 <li>
 <b>
-#78 Compiler crash when encountering function reference on nested class  -- Fixed
+#93 Compiler crash when encountering function reference on nested class  -- Fixed
 </b>
 
 <details>
@@ -3763,7 +4382,7 @@ public class X extends Foo {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Inheritance, Function reference, Function type
+Inheritance / Implementation of multiple interfaces, Function reference, Function type
 <br>
 <b>Fix Commit(s)</b>:
 <ul>
@@ -3788,7 +4407,7 @@ Inheritance, Function reference, Function type
 </li>
 <li>
 <b>
-#79 Inconsistency in handling of numeric types 
+#94 Inconsistency in handling of numeric types 
 </b>
 
 <details>
@@ -3830,7 +4449,7 @@ public class Main {
 </li>
 <li>
 <b>
-#80 STC: Access to field/property is forbidden after instanceof.  -- Fixed
+#95 STC: Access to field/property is forbidden after instanceof.  -- Fixed
 </b>
 
 <details>
@@ -3884,7 +4503,7 @@ class C {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Inheritance, Subtyping, Flow typing
+Inheritance / Implementation of multiple interfaces, Subtyping, Flow typing
 <br>
 <b>Fix Commit(s)</b>:
 <ul>
@@ -3900,7 +4519,7 @@ Inheritance, Subtyping, Flow typing
 </li>
 <li>
 <b>
-#81 Cannot pass numeric constant to a method with a generic type 
+#96 Cannot pass numeric constant to a method with a generic type 
 </b>
 
 <details>
@@ -3945,7 +4564,7 @@ Parameterized class, Parameterized type
 </li>
 <li>
 <b>
-#82 STC: Cannot find matching method when using Generics  -- Fixed
+#97 STC: Cannot find matching method when using Generics  -- Fixed
 </b>
 
 <details>
@@ -3986,7 +4605,7 @@ class Main {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-Parameterized class, Parameterized type, Inheritance
+Parameterized class, Parameterized type, Inheritance / Implementation of multiple interfaces
 <br>
 <b>Fix Commit(s)</b>:
 <ul>
@@ -4002,7 +4621,7 @@ Parameterized class, Parameterized type, Inheritance
 </li>
 <li>
 <b>
-#83 !instanceof inference does not work 
+#98 !instanceof inference does not work 
 </b>
 
 <details>
@@ -4049,12 +4668,1430 @@ Flow typing
 </li>
 </ul>
 
+<h3>Kotlin</h3>
+
+<ul>
+<li>
+<b>
+#99 K1: IllegalArgumentException: fromIndex(0) > toIndex(-1) when wrapping receiver with backticks 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-60597">https://youtrack.jetbrains.com/issue/KT-60597</a>
+<br>
+<b>Date found</b>:
+2023-07-21
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun test(): Unit 
+{
+  `java.lang.Short.TYPE`.getConstructor(TODO())
+}
+</xmp>
+</pre>
+
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#100 Compilation performance regression when handling nested polymorphic types 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-59759">https://youtrack.jetbrains.com/issue/KT-59759</a>
+<br>
+<b>Date found</b>:
+2023-06-29
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Compilation performance issue
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+kt
+import org.apache.commons.collections4.*;
+import org.apache.commons.collections4.keyvalue.*;
+import org.apache.commons.collections4.map.*;
+import org.apache.commons.collections4.iterators.*;
+import org.apache.commons.collections4.functors.*;
+import org.apache.commons.collections4.set.*;
+import org.apache.commons.collections4.collection.*;
+import org.apache.commons.collections4.trie.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+typealias A = EmptyIterator<String>
+typealias B = AbstractCollectionDecorator<UnmodifiableBoundedCollection<A>>
+typealias C = LazySortedMap<String, Stack<MultiSet<NullIsTruePredicate<ToDoubleFunction<B>>>>>
+typealias D = EmptyIterator<SkippingIterator<ZippingIterator<IteratorEnumeration<C>>>>
+typealias F = List<ExceptionPredicate<Iterator<Stream<D>>>>
+fun test(): Unit 
+{
+  val res = (TODO() as AbstractKeyValue<Spliterators.AbstractSpliterator<FixedSizeMap<Spliterators.AbstractLongSpliterator, HashedMap<ZippingIterator<AbstractMap.SimpleEntry<String, Comparable<ToDoubleBiFunction<String, MapBackedSet<Iterator<CompositeCollection<Trie<Function0<List<F>>, String>>>, String>>>>>, String>>>, String>)
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#101 "AssertionError: Resolution error of this type shouldn't occur for resolve if as a call" caused by reflective access of function 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-59574">https://youtrack.jetbrains.com/issue/KT-59574</a>
+<br>
+<b>Date found</b>:
+2023-06-22
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+kt
+import com.google.common.collect.ImmutableSortedMap
+ //     implementation("com.google.guava:guava:32.0.1-jre")
+@Suppress("UNREACHABLE_CODE")
+fun test(): Unit 
+{
+  val y: java.util.Comparator<Double> = TODO()
+  val res: (Double, Double) -> Int = if (true)
+      com.google.common.collect.ImmutableSortedMap.of(10.0, y).get(10.0)::compare // Type mismatch. Required: Comparator<Double> Found: Comparator<Double>?
+    else TODO())
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Conditionals, Function reference, Parameterized type, Parameterized class, Nullable type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#102 Nullability checks are not ignored when "-Xnullability-annotations=@javax.annotation:ignore" is provided 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-57940">https://youtrack.jetbrains.com/issue/KT-57940</a>
+<br>
+<b>Date found</b>:
+2023-04-12
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+kt
+// implementation ("com.google.guava:guava:31.1-android")
+fun test(): Unit 
+{
+    val x: com.google.common.collect.ForwardingConcurrentMap<Char, Int> = TODO()
+    val y: Int = x.replace('d', 1)
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized type, Parameterized class, Nullable type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#103 "NoSuchElementException" with Array extension function with cast 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-57512">https://youtrack.jetbrains.com/issue/KT-57512</a>
+<br>
+<b>Date found</b>:
+2023-03-22
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+kt
+import java.util.function.*;
+fun test(p: LongToDoubleFunction): Unit 
+{
+    arrayOf(p).reduceRightIndexed(fun (x, y, z): LongToDoubleFunction {
+        val local: Function1<kotlin.UInt, LongToDoubleFunction> = (
+            TODO() as Grouping<UInt, LongToDoubleFunction>)::keyOf
+        return p
+  })
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Function reference, Single Abstract Method (SAM), Parameterized type, Parameterized class, Array type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#104 False positive CALLABLE_REFERENCE_RESOLUTION_AMBIGUITY for method reference 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-57518">https://youtrack.jetbrains.com/issue/KT-57518</a>
+<br>
+<b>Date found</b>:
+2023-03-22
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+kt
+fun test() {
+    val y: MutableList<IntIterator> = TODO()
+    val d: Function1<Iterator<Int>, Boolean> = TODO()
+    m<IntIterator>(if (true) d else y::add) // fails
+    val z: Function1<IntIterator, Boolean> = if (true) d else y::add // works
+}
+fun <T> m(x: (T) -> Boolean) {}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Function reference, Conditionals, Parameterized function, Parameterized type, Parameterized class, Single Abstract Method (SAM)
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#105 NI: Type mismatch when encountering bounded type parameter and projections  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-54990">https://youtrack.jetbrains.com/issue/KT-54990</a>
+<br>
+<b>Date found</b>:
+2022-11-16
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2023-02-10
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+kt
+class A<T1, T2: B<T1, Double>>
+class B<T1, T2>
+class C<L>(val x: A<out L, out B<L, Double>>)
+fun test() {
+    val x: A<out Any, out B<Any, Double>> = A()
+    C<Any>(x)
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized type, Parameterized class, Wildcard type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#106 TYPE_MISMATCH when using a SAM type with star projection 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-52307">https://youtrack.jetbrains.com/issue/KT-52307</a>
+<br>
+<b>Date found</b>:
+2022-05-06
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+kt
+import java.util.function.Function;
+class A(val x: Function<*, String>)
+fun main() {
+    A({ x: String -> x })
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Wildcard type, Parameterized type, Parameterized class, Single Abstract Method (SAM), Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#107 NI: Unexpected TYPE_MISMATCH when combining nested conditional and contravariant type argument 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47530">https://youtrack.jetbrains.com/issue/KT-47530</a>
+<br>
+<b>Date found</b>:
+2021-06-30
+<br>
+<b>Status</b>:
+Open
+
+<br>
+<b>Resolution date</b>:
+2022-07-28
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T>
+fun main() {
+    val x: Foo<in Long> =
+      if (true) Foo<Long>()
+      else
+        if (true) Foo<Long>()
+        else Foo<Number>()
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Use-site variance, Conditionals, Subtyping
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#108 NI: NullPointerException on compiling anonymous function returning a method reference 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-49583">https://youtrack.jetbrains.com/issue/KT-49583</a>
+<br>
+<b>Date found</b>:
+2021-11-06
+<br>
+<b>Status</b>:
+Open
+
+<br>
+<b>Resolution date</b>:
+2022-07-28
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo(var pickaxe: Function0<Function1<Char, Any>>)
+interface I {
+  fun m(): Int
+}
+fun test() {
+  val x = Foo({ -> fun (p: Char): Any {
+      fun inner_m(): Any {
+        val x: I = TODO()
+        x::m
+      }
+      return inner_m()
+     }}
+  )
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Function type, Function reference, Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#109 "Unexpected tokens" when `if` statement contains double parenthesis in variable assignment 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-43806">https://youtrack.jetbrains.com/issue/KT-43806</a>
+<br>
+<b>Date found</b>:
+2020-12-07
+<br>
+<b>Status</b>:
+Submitted
+
+<br>
+<b>Resolution date</b>:
+2022-06-08
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+ val b = 98 < (if (("bar" > "foo")) 5 else 1)
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Conditionals
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#110 Support SAM conversions on value parameters inferred into Kotlin functional interface 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48838">https://youtrack.jetbrains.com/issue/KT-48838</a>
+<br>
+<b>Date found</b>:
+2021-09-21
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun interface FI {
+    fun foo(i: Int): Int
+}
+fun test1(x: FI) {}
+fun <T> test2(x: T) {}
+fun main() {
+    test1({x: Int -> x})
+    test2<FI>({x: Int -> x}) // error [TYPE_MISMATCH] Type mismatch.
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Parameterized function, Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#111 TYPE_MISMATCH when using a SAM type with star projection 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-52307">https://youtrack.jetbrains.com/issue/KT-52307</a>
+<br>
+<b>Date found</b>:
+2022-05-06
+<br>
+<b>Status</b>:
+Submitted
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import java.util.function.Function;
+class A(val x: Function<*, String>)
+fun main() {
+    A({ x: String -> x })
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Lambda, Single Abstract Method (SAM), Subtyping
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#112 Inconsistency in overload resolution when calling a scope function 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48958">https://youtrack.jetbrains.com/issue/KT-48958</a>
+<br>
+<b>Date found</b>:
+2021-09-28
+<br>
+<b>Status</b>:
+Submitted
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun run(x: String): Unit  {}
+inline fun <R> test(block: () -> R): R = block()
+fun test(x: String): Unit {}
+fun <T> ret(): T = TODO()
+class A {
+  fun d() {
+    test(ret()) // Calls test(x: String): Unit
+    run(ret()) // Calls <R> run(block: () -> R): R
+  }
+}
+fun main() {
+    test(ret()) // Calls test(x: String): Unit
+    run(ret()) // Calls run(x: String): Unit
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized function, Function type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#113 TYPE_MISMATCH when combining use-site variance with bounded polymorphism 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47508">https://youtrack.jetbrains.com/issue/KT-47508</a>
+<br>
+<b>Date found</b>:
+2021-06-28
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+open class A
+open class B: A()
+class C : B()
+class Foo<T : A>(val x: T)
+fun main() {
+    val x: Foo<in C> = TODO()
+    val y: A = x.x
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Inheritance / Implementation of multiple interfaces, Parameterized class, Parameterized type, Use-site variance, Bounded type parameter, Subtyping
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#114 NI: Wrong type is inferred on combining conditional and contravariant type argument 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47231">https://youtrack.jetbrains.com/issue/KT-47231</a>
+<br>
+<b>Date found</b>:
+2021-06-10
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Foo<T>
+class Bar(val x : Foo<in Float>)
+fun main() {
+    val x: Foo<in Float> = Foo<Float>()
+    val y: Foo<in Float> = Foo<Float>()
+    Bar(x) // works
+    val z = if (true) x else y
+    Bar(z) // works
+    Bar(if (true) x else y) // fails
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Use-site variance
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#115 False positive "NOTHING_TO_OVERRIDE" when combining varargs with type parameters 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-46662">https://youtrack.jetbrains.com/issue/KT-46662</a>
+<br>
+<b>Date found</b>:
+2021-05-13
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+open class A<T> {
+    open fun foo(vararg x: T) {}
+}
+class B: A<Float>() {
+    override fun foo(vararg x: Float) {} // NOTHING_TO_OVERRIDE
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance / Implementation of multiple interfaces, Overriding, Variable argument
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#116 JVM IR: "IndexOutOfBoundsException: Cannot pop operand off an empty stack" on compiling unused identity equality of Double literals  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-46864">https://youtrack.jetbrains.com/issue/KT-46864</a>
+<br>
+<b>Date found</b>:
+2021-05-21
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-05-31
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun m(): Unit
+{
+  (40.523 !== 62.562)
+}
+</xmp>
+</pre>
+
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/9091ca7b510'>https://github.com/JetBrains/kotlin/commit/9091ca7b510</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#117 IllegalStateException through `PositioningStrategies$SECONDARY_CONSTRUCTOR_DELEGATION_CALL$1.mark` caused by inner enum  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-45339">https://youtrack.jetbrains.com/issue/KT-45339</a>
+<br>
+<b>Date found</b>:
+2021-03-07
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-03-24
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+interface Foo<T> {
+    inner enum class Bar : Foo<T>
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/ae4dd80254f'>https://github.com/JetBrains/kotlin/commit/ae4dd80254f</a>
+</li>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/8068a5439fe'>https://github.com/JetBrains/kotlin/commit/8068a5439fe</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#118 JVM / IR: "AssertionError: Primitive array expected: CLASS IR_EXTERNAL_DECLARATION_STUB CLASS"  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48671">https://youtrack.jetbrains.com/issue/KT-48671</a>
+<br>
+<b>Date found</b>:
+2021-09-08
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-09-11
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+val x: Any = arrayOf<Any>(emptyArray<Int>(), intArrayOf(9, 19, -3))
+class A
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Array, Subtyping
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/23420ecf7a6'>https://github.com/JetBrains/kotlin/commit/23420ecf7a6</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#119 SAM conversions by expected type 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48840">https://youtrack.jetbrains.com/issue/KT-48840</a>
+<br>
+<b>Date found</b>:
+2021-09-21
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Duplicate
+<br>
+<b>Resolution date</b>:
+2022-01-26
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun interface FI {
+  fun foo(p: Double): Long
+}
+fun bar(fi: FI) {}
+class A {
+    fun buz(p: Double): Long {
+        return p.toLong()
+    }
+}
+fun foo() {
+    bar({p: Double -> p.toLong()}) // works
+    val v1: FI = FI {p: Double -> p.toLong()} // works
+    val a: A = A()
+    bar(a::buz) // Works
+    val v2: FI = FI a::buz // Fails -- wrong syntax?
+    val v3: FI = a::buz // Fails
+    val v4: FI = a::buz as FI // Work-around
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Lambda, Function reference, Function type
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#120 TYPE_MISMATCH error when applying `fun interface` in the initialization of a type constructor 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48858">https://youtrack.jetbrains.com/issue/KT-48858</a>
+<br>
+<b>Date found</b>:
+2021-09-22
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Duplicate
+<br>
+<b>Resolution date</b>:
+2022-01-25
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+fun interface FI {
+  fun foo(p: Double): Long
+}
+class A(val x: FI)
+class B<T>(val x: T)
+fun foo() {
+    val x = {p: Double -> p.toLong()}
+    val a1 = A({p: Double -> p.toLong()})
+    val a2 = A(x)
+    val b1 = B<FI>({p: Double -> p.toLong()}) // [TYPE_MISMATCH] Type mismatch.
+    val b2 = B<FI>(x) // [TYPE_MISMATCH] Type mismatch.
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Parameterized class, Lambda
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#121 JVM IR: "AnalyzerException: Argument 1: expected I, but found R" when assigning an array of numbers to an Any variable 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-48766">https://youtrack.jetbrains.com/issue/KT-48766</a>
+<br>
+<b>Date found</b>:
+2021-09-15
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Obsolete
+<br>
+<b>Resolution date</b>:
+2021-09-15
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+val x: Any = arrayOf<Number>(-74, -43)
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Subtyping, Array
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#122 JVM IR: "AnalyzerException: Argument 1: expected I, but found R" on compiling a method with a generic default argument whose bound is a primitive  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-47073">https://youtrack.jetbrains.com/issue/KT-47073</a>
+<br>
+<b>Date found</b>:
+2021-06-01
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-06-04
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+class Test<T: Char> {
+  fun foo(): String {
+    fun nested(x: T = TODO()): String {
+      return "str"
+    }
+    return nested()
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Bounded type parameter
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/7fd033adaea'>https://github.com/JetBrains/kotlin/commit/7fd033adaea</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#123 JVM IR: ACCIDENTAL_OVERRIDE when overriding a generic field where the type parameter has a primitive bound  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://youtrack.jetbrains.com/issue/KT-44627">https://youtrack.jetbrains.com/issue/KT-44627</a>
+<br>
+<b>Date found</b>:
+2021-01-30
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+<br>
+<b>Resolution date</b>:
+2021-02-15
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+open class A<T: Char>(open var x: T)
+open class B<T: Char>(open override var x: T): A<T>(x)
+class C(override var x: Char): B<Char>('x')
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Parameterized class, Parameterized type, Inheritance / Implementation of multiple interfaces, Overriding, Bounded type parameter
+<br>
+<b>Fix Commit(s)</b>:
+<ul>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/e1a75f82031'>https://github.com/JetBrains/kotlin/commit/e1a75f82031</a>
+</li>
+<li>
+<a href='https://github.com/JetBrains/kotlin/commit/b262d09a81b'>https://github.com/JetBrains/kotlin/commit/b262d09a81b</a>
+</li>
+
+</ul>
+
+<br>
+<br>
+</details>
+</li>
+</ul>
+
+<h3>Scala</h3>
+
+<ul>
+<li>
+<b>
+#124 AssertionError when loading class file 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://github.com/lampepfl/dotty/issues/18091">https://github.com/lampepfl/dotty/issues/18091</a>
+<br>
+<b>Date found</b>:
+2023-06-28
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+import io.restassured.internal.support.ParameterUpdater;
+object Test {
+  def test() = {
+    val x: ParameterUpdater = null;
+  }
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Inner class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#125 Unexpected type mismatch when referencing an overloaded method 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://github.com/lampepfl/dotty/issues/17540">https://github.com/lampepfl/dotty/issues/17540</a>
+<br>
+<b>Date found</b>:
+2023-05-19
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Duplicate
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+Scala
+object Test {
+  def test(): Unit = {
+    val x: Function1[? >: Int, Int] = Test.m
+  }
+  def m(x: Int) = 1
+  def m(x: Int, y: Char) = false
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Single Abstract Method (SAM), Wildcard type, Function reference
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#126 MatchError when calling a public method inherited from a default class  -- Fixed
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://github.com/lampepfl/dotty/issues/17391">https://github.com/lampepfl/dotty/issues/17391</a>
+<br>
+<b>Date found</b>:
+2023-05-02
+<br>
+<b>Status</b>:
+Closed
+<br>
+<b>Resolution</b>:
+Fixed
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+java
+package mypkg;
+class Base<E> {
+    public void retainAll(String x) {}
+}
+public class Bar<E> extends Base<E> {}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Access modifier, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#127 Unexpected overload ambiguity when using type parameter with upper bound 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://github.com/lampepfl/dotty/issues/17412">https://github.com/lampepfl/dotty/issues/17412</a>
+<br>
+<b>Date found</b>:
+2023-05-04
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+Scala
+object Foo {
+  def test(): Unit = {
+    val x: Map[String, String] = ???
+    Foo.m[Map[String, String]](x)
+  }
+  // if we comment the following line, then it compiles
+  def m[T](x: Array[T]) = true
+  def m[T <: String](x: T) = true
+  def m[T <: Map[?, ?]](x: T) = true
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Parameterized function, Parameterized type, Parameterized class, Array type, Bounded type parameter
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#128 Fail to assign int constant to Short in the presence of overloaded methods 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://github.com/lampepfl/dotty/issues/17360">https://github.com/lampepfl/dotty/issues/17360</a>
+<br>
+<b>Date found</b>:
+2023-04-27
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+Scala
+object Foo {
+  def test(): Unit = {
+    Foo.m[Short](10)
+  }
+  def m[T](x: T) = true
+  def m[T](x: T*) = true
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Overloading, Variable argument, Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#129 Unexpected overload ambiguity when referencing an overloaded method 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://github.com/lampepfl/dotty/issues/17310">https://github.com/lampepfl/dotty/issues/17310</a>
+<br>
+<b>Date found</b>:
+2023-04-19
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Unexpected compile-time error
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+Scala
+class Foo[T] {
+  def m(x: T): Boolean = true
+  def m(x: T, y: Int): Boolean = false
+}
+def test(): Unit = {
+  val x: Foo[Float] = new Foo[Float]()
+  val y: Function1[? >: Float, Boolean] = x.m _
+}
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Single Abstract Method (SAM), Function reference, Parameterized type, Parameterized class, Wildcard type, Overloading, Parameterized function
+
+<br>
+<br>
+</details>
+</li>
+<li>
+<b>
+#130 error when pickling tree: assertion failed: method $anonfun 
+</b>
+
+<details>
+<br>
+<b>Link</b>:
+<a href="https://github.com/lampepfl/dotty/issues/15786">https://github.com/lampepfl/dotty/issues/15786</a>
+<br>
+<b>Date found</b>:
+2022-07-29
+<br>
+<b>Status</b>:
+Open
+
+
+<br>
+<b>Symptom</b>:
+Crash
+<br>
+<b>Test case</b>:
+<pre>
+<xmp>
+Scala
+class A(val f: () => Int) {
+  def mA(p: Int = 0): Int = p
+}
+trait B {
+  def mB(p1: Int): Unit
+}
+class C[T](val f1: B, val f2: T)
+val f = new A(() => {
+  val x: B = null
+  C[Int](x, 0).f1.mB(1);
+  1
+}).mA()
+</xmp>
+</pre>
+<b>Test Case Characteristics</b>:
+Lambda, Parameterized type, Parameterized class
+
+<br>
+<br>
+</details>
+</li>
+</ul>
+
 <h3>Java</h3>
 
 <ul>
 <li>
 <b>
-#84 StackOverflowError on computing the GLB 
+#131 StackOverflowError on computing the GLB 
 </b>
 
 <details>
@@ -4099,7 +6136,7 @@ Parameterized class, Parameterized type, Bounded type parameter, Use-site varian
 </li>
 <li>
 <b>
-#85 Cannot assign method reference to Generic Function Interface 
+#132 Cannot assign method reference to Generic Function Interface 
 </b>
 
 <details>
@@ -4164,7 +6201,7 @@ interface Function1<P, R> {
 </xmp>
 </pre>
 <b>Test Case Characteristics</b>:
-SAM type, Function type, Use-site variance, Lambda, Subtyping, Function reference
+Single Abstract Method (SAM), Function type, Use-site variance, Lambda, Subtyping, Function reference
 
 <br>
 <br>
@@ -4172,7 +6209,7 @@ SAM type, Function type, Use-site variance, Lambda, Subtyping, Function referenc
 </li>
 <li>
 <b>
-#86 AssertionError when combining pattern matching and function closure  -- Fixed
+#133 AssertionError when combining pattern matching and function closure  -- Fixed
 </b>
 
 <details>
@@ -4228,7 +6265,7 @@ Function type, Flow typing, Lambda
 </li>
 <li>
 <b>
-#87 Compile-time error when using wildcard as type argument 
+#134 Compile-time error when using wildcard as type argument 
 </b>
 
 <details>
@@ -4279,7 +6316,7 @@ Parameterized class, Parameterized type, Bounded type parameter, Use-site varian
 </li>
 <li>
 <b>
-#88 Misleading report with type variables when extending one of the type arguments 
+#135 Misleading report with type variables when extending one of the type arguments 
 </b>
 
 <details>
@@ -4316,7 +6353,7 @@ Parameterized class, Parameterized type, Bounded type parameter
 </li>
 <li>
 <b>
-#89 javac crashes at com.sun.tools.javac.code.Types$7.visitType with AssertionError 
+#136 javac crashes at com.sun.tools.javac.code.Types$7.visitType with AssertionError 
 </b>
 
 <details>
@@ -4360,7 +6397,7 @@ Conditionals, Lambda
 </li>
 <li>
 <b>
-#90 Unexpected compile-time error when combining generic function and function ref 
+#137 Unexpected compile-time error when combining generic function and function ref 
 </b>
 
 <details>

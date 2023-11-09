@@ -5,7 +5,6 @@ python generate/gen.py generate/bugs.json templates ./
 """
 import argparse
 import json
-import sys
 import os
 
 from collections import defaultdict
@@ -94,22 +93,32 @@ features_lookup = {
     "Use-site variance": "Parametric polymorphism",
     "Bounded type parameter": "Parametric polymorphism",
     "Declaration-site variance": "Parametric polymorphism",
-    "Inheritance": "OOP features",
+    "Inheritance / Implementation of multiple interfaces": "OOP features",
     "Overriding": "OOP features",
+    "Default method": "OOP features",
+    "Inner class": "OOP features",
+    "Access modifier": "OOP features",
+    "Static method": "OOP features",
+    "Recursive upper bound": "Bounded polymorphism",
+    "Array type": "Type system-related features",
     "Subtyping": "Type system-related features",
     "Primitive type": "Type system-related features",
     "Wildcard type": "Type system-related features",
     "Nothing": "Type system-related features",
+    "Nullable type": "Type system-related features",
     "Lambda": "Functional programming",
     "Function reference": "Functional programming",
-    "SAM type": "Functional programming",
+    "Single Abstract Method (SAM)": "Functional programming",
+    "Overloading": "Overloading",
+    "Operator": "Standard language features",
     "Function type": "Functional programming",
     "Conditionals": "Standard language features",
     "Array": "Standard language features",
     "Cast": "Standard language features",
-    "Variable arguments": "Standard language features",
+    "Variable argument": "Standard language features",
     "Type argument inference": "Type inference",
     "Variable type inference": "Type inference",
+    "Bridge method": "Parametric polymophirsm",
     "Parameter type inference": "Type inference",
     "Flow typing": "Type inference",
     "Return type inference": "Type inference",
@@ -120,7 +129,8 @@ features_lookup = {
 lang_lookup = {
     'Groovy': 'groovyc',
     'Kotlin': 'kotlinc',
-    'Javac': 'javac',
+    'Java': 'javac',
+    'Scala': 'scalac',
     'total': 'Total'
 }
 
@@ -132,6 +142,7 @@ rows_lookup = {
     'inference/soundness': 'TEM & TOM',
     'Unexpected Compile-Time Error': 'UCTE',
     'Unexpected Runtime Behavior': 'URB',
+    'Compilation Performance Issue': 'CPI',
     'crash': 'Crash'
 }
 
@@ -139,7 +150,8 @@ rows_lookup = {
 urls = {
     'Groovy': 'https://github.com/apache/groovy/commit/',
     'Kotlin': 'https://github.com/JetBrains/kotlin/commit/',
-    'Java': 'https://github.com/openjdk/jdk/commit/'
+    'Java': 'https://github.com/openjdk/jdk/commit/',
+    'Scala': 'https://github.com/lampepfl/dotty/commit/',
 }
 
 
@@ -173,6 +185,11 @@ def process(bug, res, bugs_by_mutator, chars, combinations, categories):
                 'Closed': None,
                 'Resolved': None,
                 'Open': 'Confirmed'
+            },
+            'Scala': {
+                'Open': 'Confirmed',
+                'In Progress': 'Confirmed',
+                'Closed': None
             }
         },
         'resolution': {
@@ -186,8 +203,15 @@ def process(bug, res, bugs_by_mutator, chars, combinations, categories):
                 'Duplicate': 'Duplicate',
                 'Fixed': 'Fixed',
                 'Information Provided': 'Wont fix',
+                "Won't Fix": "Wont fix",
+                'Closed': None
             },
             'Java': {
+                'Not an Issue':  'Wont fix',
+                'Duplicate': 'Duplicate',
+                'Fixed': 'Fixed'
+            },
+            'Scala': {
                 'Not an Issue':  'Wont fix',
                 'Duplicate': 'Duplicate',
                 'Fixed': 'Fixed'
@@ -197,6 +221,7 @@ def process(bug, res, bugs_by_mutator, chars, combinations, categories):
             'Unexpected Compile-Time Error': 'Unexpected Compile-Time Error',
             'Unexpected Runtime Behavior': 'Unexpected Runtime Behavior',
             'crash': 'crash',
+            'Compilation Performance Issue': 'Compilation Performance Issue',
             'Misleading Report': 'Unexpected Compile-Time Error'
         },
     }
@@ -209,6 +234,8 @@ def process(bug, res, bugs_by_mutator, chars, combinations, categories):
     if status is None:
         status = d['resolution'][lang].get(bresolution, None)
     symptom = d['symptom'].get(bsymptom, None)
+    if status is None:
+        import pdb; pdb.set_trace()
     res[lang]['status'][status] += 1
     res[lang]['symptom'][symptom] += 1
     res[lang]['mutator'][bmutator] += 1
@@ -242,13 +269,14 @@ def create_index(templates, output, res):
             'TOTAL_BUGS': sum(v for v in res['total']['status'].values()),
             'TOTAL_FIXED': res['total']['status']['Fixed']
     }
-    for lang in ('Groovy', 'Kotlin', 'Java'):
+    for lang in ('Groovy', 'Kotlin', 'Java', 'Scala'):
         to_replace[lang.upper() + '_BUGS'] = sum(
             v for v in res[lang]['status'].values())
         to_replace[lang.upper() + '_FIXED'] = res[lang]['status']['Fixed']
 
     symptoms = [('Unexpected Compile-Time Error', 'UCTE'),
                 ('Unexpected Runtime Behavior', 'URB'),
+                ('Compilation Performance Issue', 'CPI'),
                 ('crash', 'CRASH')]
     for symptom, keyword in symptoms:
         to_replace[keyword + '_BUGS'] = res['total']['symptom'][symptom]
@@ -340,6 +368,7 @@ def main():
         'symptom': {
             'Unexpected Compile-Time Error': 0,
             'Unexpected Runtime Behavior': 0,
+            'Compilation Performance Issue': 0,
             'crash': 0
         },
         'mutator': {
@@ -358,7 +387,7 @@ def main():
     categories = defaultdict(lambda: 0)
     for bug in data:
         process(bug, res, bugs_by_mutator, chars, combinations, categories)
-    langs = ['Groovy', 'Kotlin', 'Java', 'total']
+    langs = ['Groovy', 'Kotlin', 'Java', 'Scala', 'total']
 
     create_index(args.templates, args.output, res)
     create_bug_reports('Program Generator', bugs_by_mutator['generator'],
